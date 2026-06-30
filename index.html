@@ -12,7 +12,6 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234361ee'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3E%F0%9F%93%84%3C/text%3E%3C/svg%3E">
 <title>QR → Excel</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 16px 24px;max-width:480px;margin:0 auto}
@@ -43,17 +42,19 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 .del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;cursor:pointer;font-size:11px;font-weight:600}
-.status-msg{text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:8px}
-.status-msg.on{background:#d1fae5;color:#065f46}
-.status-msg.off{background:#fee2e2;color:#991b1b}
+.conn-info{background:#d1fae5;color:#065f46;text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:8px}
+.conn-info.off{background:#fee2e2;color:#991b1b}
 </style>
 </head>
 <body>
 
 <h1>QR → Excel</h1>
 
+<div id="connBar" class="conn-info off">Нет подключения к ПК</div>
+
 <div class="card">
-  <button class="btn btn-primary" id="btnScan">&#128247; Сканировать чек</button>
+  <button class="btn btn-primary" id="btnScanConn">&#128247; Сканировать QR с ПК</button>
+  <button class="btn btn-primary hidden" id="btnScan">&#128247; Сканировать чек</button>
   <div class="scanner-wrap" id="scannerWrap">
     <div id="reader"></div>
     <p class="status" id="scanStatus">Наведите камеру на QR-код</p>
@@ -78,7 +79,6 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
   </div>
   <div id="actions" class="hidden" style="margin-top:8px">
     <button class="btn btn-success" id="btnOpenPC">&#128202; Открыть на ПК</button>
-    <button class="btn btn-primary" id="btnDL">&#128190; Скачать .xlsx</button>
     <button class="btn btn-danger" id="btnClear">Очистить</button>
   </div>
 </div>
@@ -86,16 +86,46 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
 <div class="toast" id="toast"></div>
 
 <script>
-var TG='https://api.telegram.org/bot8816604840:AAGhrlFMgrz71sNgKxhgPnJvdmu0gbjtYEw';
-var CHAT='8881681054';
-var entries=JSON.parse(localStorage.getItem('q')||'[]');
-var qr=null,scanning=false,lastData=null,tt=null;
-var sending=false;
+var serverUrl = localStorage.getItem('sv') || null;
+var entries = JSON.parse(localStorage.getItem('q') || '[]');
+var qr = null, scanning = false, lastData = null, tt = null;
 
 function $(i){return document.getElementById(i)}
 function tm(m,e){clearTimeout(tt);var t=$('toast');t.textContent=m;t.style.background=e?'#ff3b30':'#1c1c1e';t.classList.add('show');tt=setTimeout(function(){t.classList.remove('show')},2500)}
 function pr(t){var d={date:'',sum:'',num:''};try{var p=t.startsWith('http')?new URL(t).searchParams:new URLSearchParams(t);d.num=p.get('i')||p.get('fd')||'';d.sum=p.get('s')||'';var v=p.get('t')||'';if(v){var m=v.match(/^(\d{4})(\d{2})(\d{2})/);if(m)d.date=m[3]+'.'+m[2]+'.'+m[1]}}catch(e){}return d}
-function xl(){var wb=XLSX.utils.book_new();var d=[['№','Дата','Наименование','Сумма']];entries.forEach(function(e,i){d.push([i+1,e.date||'',e.product||'',e.sum||''])});var ws=XLSX.utils.aoa_to_sheet(d);ws['!cols']=[{w:5},{w:14},{w:30},{w:12}];XLSX.utils.book_append_sheet(wb,ws,'Чеки');var out=XLSX.write(wb,{bookType:'xlsx',type:'array'});var b=new Blob([out],{type:'application/octet-stream'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='cheki.xlsx';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);return out}
+
+function setConn(u){
+  serverUrl = u; localStorage.setItem('sv', u);
+  $('connBar').textContent = 'Подключено к ПК: ' + u;
+  $('connBar').className = 'conn-info';
+  $('btnScanConn').classList.add('hidden');
+  $('btnScan').classList.remove('hidden');
+  $('btnScan').textContent = 'Сканировать чек';
+  tm('Подключено!');
+}
+
+async function scConn(){
+  if(scanning)return;
+  $('scannerWrap').classList.add('active');
+  $('scanStatus').textContent = 'Наведите на QR с экрана ПК';
+  try{
+    qr=new Html5Qrcode("reader");
+    await qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},
+      function(t){
+        if(!scanning)return;
+        scanning=false;sp();
+        var url = t.trim();
+        if(url.startsWith('http://')||url.startsWith('https://')){
+          // Пробуем подключиться
+          fetch(url+'/ping').then(function(r){return r.text()}).then(function(txt){
+            if(txt=='pong')setConn(url);
+            else{tm('Это не сервер QR-Excel',1);$('btnScanConn').classList.remove('hidden')}
+          }).catch(function(){setConn(url)});
+        } else {tm('Нужен QR с ПК',1);$('btnScanConn').classList.remove('hidden')}
+      },function(){});
+    scanning=true;
+  }catch(e){tm('Ошибка камеры',1);$('btnScanConn').classList.remove('hidden')}
+}
 
 async function sc(){
   if(scanning)return;
@@ -105,7 +135,7 @@ async function sc(){
     qr=new Html5Qrcode("reader");
     await qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},
       function(t){if(scanning){scanning=false;sp();sr(t)}},function(){});
-    scanning=true;$('scanStatus').textContent='Наведите камеру на QR-код'
+    scanning=true;$('scanStatus').textContent='Наведите камеру на QR-код чека'
   }catch(e){$('scanStatus').textContent='Ошибка: '+e.message;setTimeout(function(){$('scannerWrap').classList.remove('active')},2000)}
 }
 function sp(){if(qr){try{qr.stop();qr.clear()}catch(e){}qr=null}scanning=false;$('scannerWrap').classList.remove('active')}
@@ -114,7 +144,7 @@ function ad(p){if(!lastData)return null;var e={date:lastData.date,sum:lastData.s
 $('btnSave').onclick=function(){if(ad($('fieldProduct').value.trim())){tm('Сохранено');$('resultCard').classList.add('hidden');lastData=null}};
 $('btnSkip').onclick=function(){if(ad('')){tm('Сохранено');$('resultCard').classList.add('hidden');lastData=null}};
 $('btnCancel').onclick=function(){$('resultCard').classList.add('hidden');lastData=null};
-$('btnScan').onclick=sc;$('btnStop').onclick=sp;
+$('btnScanConn').onclick=scConn;$('btnScan').onclick=sc;$('btnStop').onclick=sp;
 
 function rt(){
   var tb=$('tbody'),em=$('emptyMsg'),ac=$('actions');
@@ -131,27 +161,23 @@ function rt(){
   })
 }
 
-$('btnDL').onclick=function(){if(!entries.length){tm('Нет записей',1);return}xl();tm('Файл скачан')};
-
 $('btnOpenPC').onclick=function(){
-  if(!entries.length||sending)return;
-  sending=true;var btn=this;btn.disabled=true;btn.innerHTML='Отправка...';
-  var data=JSON.stringify({entries:entries});
-  
-  fetch(TG+'/sendMessage',{
-    method:'POST',
-    headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:'chat_id='+CHAT+'&text='+encodeURIComponent('DATA:'+data)
-  }).then(function(r){return r.json()}).then(function(j){
-    if(j.ok){tm('Отправлено! Excel откроется на ПК');}
-    else{tm('Ошибка: '+j.description,1)}
-    sending=false;btn.disabled=false;btn.innerHTML='Открыть на ПК'
+  if(!entries.length||!serverUrl)return;
+  var btn=this;btn.disabled=true;btn.innerHTML='Отправка...';
+  fetch(serverUrl+'/open',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({entries:entries})
+  }).then(function(r){
+    if(r.ok){tm('Отправлено! Excel открывается на ПК');btn.disabled=false;btn.innerHTML='Открыть на ПК'}
+    else{tm('Ошибка',1);btn.disabled=false;btn.innerHTML='Открыть на ПК'}
   }).catch(function(){
-    tm('Нет интернета',1);sending=false;btn.disabled=false;btn.innerHTML='Открыть на ПК'
+    tm('Нет соединения с ПК',1);btn.disabled=false;btn.innerHTML='Открыть на ПК'
   });
 };
 
 $('btnClear').onclick=function(){if(!confirm('Удалить всё?'))return;entries=[];localStorage.setItem('q','[]');rt();tm('Очищено')};
+
+if(serverUrl){fetch(serverUrl+'/ping').then(function(r){if(r.ok)setConn(serverUrl)}).catch(function(){})}
 rt();
 </script>
 </body>

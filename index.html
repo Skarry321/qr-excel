@@ -12,8 +12,6 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234361ee'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3E%F0%9F%93%84%3C/text%3E%3C/svg%3E">
 <title>QR → Excel</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 16px 24px;max-width:480px;margin:0 auto;-webkit-tap-highlight-color:transparent}
@@ -150,6 +148,29 @@ var html5QrCode = null;
 var scanning = false;
 var lastData = null;
 var tTimer = null;
+var _scannerLoaded = false;
+var _xlsxLoaded = false;
+
+function loadScript(url) {
+  return new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = url;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function loadScanner() {
+  if (_scannerLoaded) return Promise.resolve();
+  _('scanStatus').textContent = 'Загрузка сканера...';
+  return loadScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js').then(function(){ _scannerLoaded = true; });
+}
+
+function loadXLSX() {
+  if (_xlsxLoaded) return Promise.resolve();
+  return loadScript('https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js').then(function(){ _xlsxLoaded = true; });
+}
 
 function _(id) { return document.getElementById(id); }
 
@@ -185,10 +206,12 @@ function parseQR(text) {
 
 async function startScan() {
   if (scanning) return;
+  _('scannerWrap').classList.add('active');
+  _('scanStatus').textContent = 'Загрузка сканера...';
   try {
-    _('scannerWrap').classList.add('active');
-    _('scanStatus').textContent = 'Запуск камеры...';
+    await loadScanner();
     html5QrCode = new Html5Qrcode("reader");
+    _('scanStatus').textContent = 'Запуск камеры...';
     await html5QrCode.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 250 } },
@@ -316,27 +339,34 @@ _('btnStop').onclick = stopScan;
 _('btnExportTG').onclick = function() {
   if (!entries.length) { toast('Нет записей', 1); return; }
   if (!config.token||!config.chatId) { toast('Настройте бота', 1); return; }
-  var wb = XLSX.utils.book_new();
-  var data = [['№','Дата','Наименование','Сумма']];
-  entries.forEach(function(e,i){ data.push([i+1, e.date||'', e.product||'', e.sum||'']); });
-  var ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Чеки');
-  var out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-  var blob = new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  var fd = new FormData();
-  fd.append('chat_id', config.chatId);
-  fd.append('document', blob, 'cheki.xlsx');
-  fd.append('caption', 'QR-Excel: ' + entries.length + ' записей');
-  fetch(TG + config.token + '/sendDocument', {method:'POST', body: fd})
-    .then(function(r){ return r.json(); })
-    .then(function(j){ if (j.ok) toast('Excel отправлен в Telegram'); else toast('Ошибка: '+(j.description||'?'),1); })
-    .catch(function(){ toast('Ошибка отправки', 1); });
+  var btn = this; btn.disabled = true; btn.innerHTML = 'Загрузка...';
+  loadXLSX().then(function() {
+    btn.disabled = false; btn.innerHTML = '&#128228; .xlsx в Telegram';
+    var wb = XLSX.utils.book_new();
+    var data = [['№','Дата','Наименование','Сумма']];
+    entries.forEach(function(e,i){ data.push([i+1, e.date||'', e.product||'', e.sum||'']); });
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Чеки');
+    var out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    var blob = new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var fd = new FormData();
+    fd.append('chat_id', config.chatId);
+    fd.append('document', blob, 'cheki.xlsx');
+    fd.append('caption', 'QR-Excel: ' + entries.length + ' записей');
+    fetch(TG + config.token + '/sendDocument', {method:'POST', body: fd})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (j.ok) toast('Excel отправлен в Telegram'); else toast('Ошибка: '+(j.description||'?'),1); })
+      .catch(function(){ toast('Ошибка отправки', 1); });
+  });
 };
 
 _('btnExportLocal').onclick = function() {
   if (!entries.length) { toast('Нет записей', 1); return; }
-  var wb = XLSX.utils.book_new();
+  var btn = this; btn.disabled = true; btn.innerHTML = 'Загрузка...';
+  loadXLSX().then(function() {
+    btn.disabled = false; btn.innerHTML = '&#128190; Скачать .xlsx';
+    var wb = XLSX.utils.book_new();
   var data = [['№','Дата','Наименование','Сумма']];
   entries.forEach(function(e,i){ data.push([i+1, e.date||'', e.product||'', e.sum||'']); });
   var ws = XLSX.utils.aoa_to_sheet(data);
@@ -351,6 +381,7 @@ _('btnExportLocal').onclick = function() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   toast('Файл cheki.xlsx скачан');
+  });
 };
 
 _('btnClear').onclick = function() {

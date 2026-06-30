@@ -9,13 +9,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#4361ee">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234361ee'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3E%F0%9F%93%84%3C/text%3E%3C/svg%3E">
 <title>QR → Excel</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 16px 24px;max-width:480px;margin:0 auto}
-h1{font-size:24px;font-weight:700;padding:16px 0 2px;text-align:center;background:linear-gradient(135deg,#4361ee,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h1{font-size:24px;padding:16px 0 2px;text-align:center;background:linear-gradient(135deg,#4361ee,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin:4px 0;color:#fff}
 .btn:active{opacity:.6}
@@ -42,19 +41,19 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 .del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;cursor:pointer;font-size:11px;font-weight:600}
-.conn-info{background:#d1fae5;color:#065f46;text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:8px}
-.conn-info.off{background:#fee2e2;color:#991b1b}
+.conn-info{text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:8px}
+.conn-info.good{background:#d1fae5;color:#065f46}
+.conn-info.bad{background:#fee2e2;color:#991b1b}
+.conn-info.wait{background:#fef3c7;color:#92400e}
 </style>
 </head>
 <body>
 
 <h1>QR → Excel</h1>
-
-<div id="connBar" class="conn-info off">Нет подключения к ПК</div>
+<div id="connBar" class="conn-info wait">Подключение...</div>
 
 <div class="card">
-  <button class="btn btn-primary" id="btnScanConn">&#128247; Сканировать QR с ПК</button>
-  <button class="btn btn-primary hidden" id="btnScan">&#128247; Сканировать чек</button>
+  <button class="btn btn-primary" id="btnScan">&#128247; Сканировать чек</button>
   <div class="scanner-wrap" id="scannerWrap">
     <div id="reader"></div>
     <p class="status" id="scanStatus">Наведите камеру на QR-код</p>
@@ -64,9 +63,9 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
 
 <div class="card hidden" id="resultCard">
   <div class="preview" id="preview"></div>
-  <label style="font-size:13px;color:#8e8e93;margin:6px 0 3px;display:block">Наименование товара</label>
+  <label style="font-size:13px;color:#8e8e93;margin:6px 0 3px">Наименование товара</label>
   <input class="field" id="fieldProduct" placeholder="Например: Молоко..." autocomplete="off">
-  <button class="btn btn-success" id="btnSave">&#128190; Сохранить</button>
+  <button class="btn btn-success" id="btnSave">Сохранить</button>
   <button class="btn btn-gray" id="btnSkip">Без названия</button>
   <button class="btn btn-gray" id="btnCancel">Отмена</button>
 </div>
@@ -78,7 +77,7 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
     <div class="empty" id="emptyMsg">Нет записей</div>
   </div>
   <div id="actions" class="hidden" style="margin-top:8px">
-    <button class="btn btn-success" id="btnOpenPC">&#128202; Открыть на ПК</button>
+    <button class="btn btn-success" id="btnOpenPC">Открыть на ПК</button>
     <button class="btn btn-danger" id="btnClear">Очистить</button>
   </div>
 </div>
@@ -86,45 +85,40 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
 <div class="toast" id="toast"></div>
 
 <script>
-var serverUrl = localStorage.getItem('sv') || null;
-var entries = JSON.parse(localStorage.getItem('q') || '[]');
-var qr = null, scanning = false, lastData = null, tt = null;
+var BASE = null;
+var entries = JSON.parse(localStorage.getItem('q')||'[]');
+var qr=null,scanning=false,lastData=null,tt=null;
 
 function $(i){return document.getElementById(i)}
 function tm(m,e){clearTimeout(tt);var t=$('toast');t.textContent=m;t.style.background=e?'#ff3b30':'#1c1c1e';t.classList.add('show');tt=setTimeout(function(){t.classList.remove('show')},2500)}
 function pr(t){var d={date:'',sum:'',num:''};try{var p=t.startsWith('http')?new URL(t).searchParams:new URLSearchParams(t);d.num=p.get('i')||p.get('fd')||'';d.sum=p.get('s')||'';var v=p.get('t')||'';if(v){var m=v.match(/^(\d{4})(\d{2})(\d{2})/);if(m)d.date=m[3]+'.'+m[2]+'.'+m[1]}}catch(e){}return d}
 
 function setConn(u){
-  serverUrl = u; localStorage.setItem('sv', u);
-  $('connBar').textContent = 'Подключено к ПК: ' + u;
-  $('connBar').className = 'conn-info';
-  $('btnScanConn').classList.add('hidden');
-  $('btnScan').classList.remove('hidden');
-  $('btnScan').textContent = 'Сканировать чек';
-  tm('Подключено!');
+  BASE=u;localStorage.setItem('sv',u);
+  $('connBar').textContent='Подключено к ПК: '+u;$('connBar').className='conn-info good';
+  tm('Подключено!');rt();
 }
 
-async function scConn(){
-  if(scanning)return;
-  $('scannerWrap').classList.add('active');
-  $('scanStatus').textContent = 'Наведите на QR с экрана ПК';
-  try{
-    qr=new Html5Qrcode("reader");
-    await qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},
-      function(t){
-        if(!scanning)return;
-        scanning=false;sp();
-        var url = t.trim();
-        if(url.startsWith('http://')||url.startsWith('https://')){
-          // Пробуем подключиться
-          fetch(url+'/ping').then(function(r){return r.text()}).then(function(txt){
-            if(txt=='pong')setConn(url);
-            else{tm('Это не сервер QR-Excel',1);$('btnScanConn').classList.remove('hidden')}
-          }).catch(function(){setConn(url)});
-        } else {tm('Нужен QR с ПК',1);$('btnScanConn').classList.remove('hidden')}
-      },function(){});
-    scanning=true;
-  }catch(e){tm('Ошибка камеры',1);$('btnScanConn').classList.remove('hidden')}
+// Автоопределение: если страница открыта с ПК-сервера
+var origin = window.location.origin;
+if(origin && origin!='file://' && origin!='null'){
+  fetch(origin+'/ping').then(function(r){return r.text()}).then(function(t){
+    if(t=='pong')setConn(origin);
+    else{$('connBar').textContent='Ошибка: сервер ПК не отвечает';$('connBar').className='conn-info bad'}
+  }).catch(function(){
+    // Не с ПК-сервера, пробуем сохраненный URL
+    var sv = localStorage.getItem('sv');
+    if(sv){
+      fetch(sv+'/ping').then(function(r){return r.text()}).then(function(t){
+        if(t=='pong')setConn(sv);
+        else{$('connBar').textContent='Нет связи с ПК. Отсканируйте QR с экрана ПК';$('connBar').className='conn-info bad'}
+      }).catch(function(){$('connBar').textContent='Нет связи с ПК';$('connBar').className='conn-info bad'});
+    } else {
+      $('connBar').textContent='Откройте эту страницу через QR с экрана ПК';$('connBar').className='conn-info bad'
+    }
+  });
+} else {
+  $('connBar').textContent='Откройте через QR с экрана ПК';$('connBar').className='conn-info bad'
 }
 
 async function sc(){
@@ -144,7 +138,7 @@ function ad(p){if(!lastData)return null;var e={date:lastData.date,sum:lastData.s
 $('btnSave').onclick=function(){if(ad($('fieldProduct').value.trim())){tm('Сохранено');$('resultCard').classList.add('hidden');lastData=null}};
 $('btnSkip').onclick=function(){if(ad('')){tm('Сохранено');$('resultCard').classList.add('hidden');lastData=null}};
 $('btnCancel').onclick=function(){$('resultCard').classList.add('hidden');lastData=null};
-$('btnScanConn').onclick=scConn;$('btnScan').onclick=sc;$('btnStop').onclick=sp;
+$('btnScan').onclick=sc;$('btnStop').onclick=sp;
 
 function rt(){
   var tb=$('tbody'),em=$('emptyMsg'),ac=$('actions');
@@ -153,7 +147,7 @@ function rt(){
   em.classList.add('hidden');ac.classList.remove('hidden');
   entries.forEach(function(e,i){
     var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+(i+1)+'</td><td>'+(e.date||'—')+'</td><td>'+(e.product||'—')+'</td><td>'+(e.sum||'—')+'</td><td><button class="del-btn" data-i="'+i+'">&#10005;</button></td>';
+    tr.innerHTML='<td>'+(i+1)+'</td><td>'+(e.date||'—')+'</td><td>'+(e.product||'—')+'</td><td>'+(e.sum||'—')+'</td><td><button class="del-btn" data-i="'+i+'">X</button></td>';
     tb.appendChild(tr)
   });
   tb.querySelectorAll('.del-btn').forEach(function(b){
@@ -162,13 +156,13 @@ function rt(){
 }
 
 $('btnOpenPC').onclick=function(){
-  if(!entries.length||!serverUrl)return;
+  if(!entries.length||!BASE)return;
   var btn=this;btn.disabled=true;btn.innerHTML='Отправка...';
-  fetch(serverUrl+'/open',{
+  fetch(BASE+'/open',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({entries:entries})
   }).then(function(r){
-    if(r.ok){tm('Отправлено! Excel открывается на ПК');btn.disabled=false;btn.innerHTML='Открыть на ПК'}
+    if(r.ok){tm('Excel открывается на ПК!');btn.disabled=false;btn.innerHTML='Открыть на ПК'}
     else{tm('Ошибка',1);btn.disabled=false;btn.innerHTML='Открыть на ПК'}
   }).catch(function(){
     tm('Нет соединения с ПК',1);btn.disabled=false;btn.innerHTML='Открыть на ПК'
@@ -176,8 +170,6 @@ $('btnOpenPC').onclick=function(){
 };
 
 $('btnClear').onclick=function(){if(!confirm('Удалить всё?'))return;entries=[];localStorage.setItem('q','[]');rt();tm('Очищено')};
-
-if(serverUrl){fetch(serverUrl+'/ping').then(function(r){if(r.ok)setConn(serverUrl)}).catch(function(){})}
 rt();
 </script>
 </body>

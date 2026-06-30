@@ -10,6 +10,7 @@
 <meta name="theme-color" content="#4361ee">
 <title>QR → Excel</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 16px 24px;max-width:480px;margin:0 auto}
@@ -40,16 +41,17 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 .del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;cursor:pointer;font-size:11px;font-weight:600}
-.info-box{background:#f0f7ff;border:1px solid #bddbff;border-radius:12px;padding:14px;margin-bottom:10px;text-align:center;line-height:1.7;font-size:13px}
-.info-box strong{color:#4361ee}
+.link-box{background:#f0f7ff;border:2px dashed #4361ee;border-radius:12px;padding:14px;margin:8px 0;text-align:center;word-break:break-all}
+.link-box .url{font-size:14px;color:#4361ee;font-weight:600;margin:6px 0}
+.link-box .hint{font-size:11px;color:#8e8e93;margin-top:4px}
+iframe{display:none}
 </style>
 </head>
 <body>
 
 <h1>QR → Excel</h1>
-<div id="infoBox" class="info-box">Загрузка...</div>
 
-<div class="card hidden" id="mainUI">
+<div class="card">
   <button class="btn btn-primary" id="btnScan">Сканировать чек</button>
   <div class="scanner-wrap" id="scannerWrap">
     <div id="reader"></div>
@@ -67,64 +69,42 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
   <button class="btn btn-gray" id="btnCancel">Отмена</button>
 </div>
 
-<div class="card hidden" id="listCard">
+<div class="card">
   <div class="table-wrap">
     <table><thead><tr><th>#</th><th>Дата</th><th>Товар</th><th>Сумма</th><th></th></tr></thead>
     <tbody id="tbody"></tbody></table>
     <div class="empty" id="emptyMsg">Нет записей</div>
   </div>
   <div id="actions" class="hidden" style="margin-top:8px">
-    <button class="btn btn-success" id="btnOpenPC">Открыть на ПК</button>
+    <button class="btn btn-success" id="btnUpload">Загрузить на dropmefiles</button>
+    <button class="btn btn-primary" id="btnDL">Скачать .xlsx</button>
     <button class="btn btn-danger" id="btnClear">Очистить</button>
   </div>
+</div>
+
+<iframe id="uploadFrame" name="uploadFrame"></iframe>
+
+<div class="card hidden" id="linkCard">
+  <p style="font-weight:600;margin-bottom:6px">Файл загружен!</p>
+  <div class="link-box">
+    <div class="url" id="fileLink">—</div>
+    <div class="hint">Откройте эту ссылку на ПК или вставьте в qr-excel.exe</div>
+  </div>
+  <button class="btn btn-gray" id="btnCopyLink">Копировать ссылку</button>
+  <button class="btn btn-gray" id="btnCloseLink">Закрыть</button>
+  <div class="status" id="uploadStatus"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-var BASE = null;
-var entries = JSON.parse(localStorage.getItem('q')||'[]');
+var entries=JSON.parse(localStorage.getItem('q')||'[]');
 var qr=null,scanning=false,lastData=null,tt=null;
+
 function $(i){return document.getElementById(i)}
-function tm(m,e){clearTimeout(tt);var t=$('toast');t.textContent=m;t.style.background=e?'#ff3b30':'#1c1c1e';t.classList.add('show');tt=setTimeout(function(){t.classList.remove('show')},2500)}
+function tm(m,e){clearTimeout(tt);var t=$('toast');t.textContent=m;t.style.background=e?'#ff3b30':'#1c1c1e';t.classList.add('show');tt=setTimeout(function(){t.classList.remove('show')},3000)}
 function pr(t){var d={date:'',sum:'',num:''};try{var p=t.startsWith('http')?new URL(t).searchParams:new URLSearchParams(t);d.num=p.get('i')||p.get('fd')||'';d.sum=p.get('s')||'';var v=p.get('t')||'';if(v){var m=v.match(/^(\d{4})(\d{2})(\d{2})/);if(m)d.date=m[3]+'.'+m[2]+'.'+m[1]}}catch(e){}return d}
-
-// Если страница открыта с ПК-сервера (HTTP, не HTTPS)
-var isPC = window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-var origin = window.location.origin;
-var saved = localStorage.getItem('sv');
-
-if (isPC) {
-  // Открыто с ПК-сервера - подключаемся
-  BASE = origin;
-  localStorage.setItem('sv', BASE);
-  showUI('Подключено к ПК: ' + BASE);
-} else {
-  // GitHub Pages или локальный файл
-  if (saved) {
-    // Пробуем сохраненный адрес
-    fetch(saved + '/ping').then(function(r){return r.text()}).then(function(t){
-      if (t === 'pong') { BASE = saved; showUI('Подключено к ПК: ' + BASE); }
-      else { showHelp(); }
-    }).catch(function(){ showHelp(); });
-  } else {
-    showHelp();
-  }
-}
-
-function showUI(msg) {
-  $('infoBox').innerHTML = '<span style="color:#065f46">' + msg + '</span>';
-  $('mainUI').classList.remove('hidden');
-  $('listCard').classList.remove('hidden');
-  rt();
-}
-
-function showHelp() {
-  $('infoBox').innerHTML =
-    '1. Запустите <strong>qr-excel.exe</strong> на ПК<br>' +
-    '2. На телефоне откройте камеру и наведите на <strong>QR-код на экране ПК</strong><br>' +
-    '3. Или введите адрес вручную: <strong>http://ПК-IP:8080</strong>';
-}
+function xl(){var wb=XLSX.utils.book_new();var d=[['N','Дата','Наименование','Сумма']];entries.forEach(function(e,i){d.push([i+1,e.date||'',e.product||'',e.sum||''])});var ws=XLSX.utils.aoa_to_sheet(d);ws['!cols']=[{w:5},{w:14},{w:30},{w:12}];XLSX.utils.book_append_sheet(wb,ws,'Чеки');var out=XLSX.write(wb,{bookType:'xlsx',type:'array'});return new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
 
 async function sc(){
   if(scanning)return;
@@ -160,20 +140,60 @@ function rt(){
   })
 }
 
-$('btnOpenPC').onclick=function(){
-  if(!entries.length||!BASE)return;
-  var btn=this;btn.disabled=true;btn.innerHTML='Отправка...';
-  fetch(BASE+'/open',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({entries:entries})
-  }).then(function(r){
-    if(r.ok){tm('Excel открывается на ПК!');btn.disabled=false;btn.innerHTML='Открыть на ПК'}
-    else{tm('Ошибка',1);btn.disabled=false;btn.innerHTML='Открыть на ПК'}
-  }).catch(function(){
-    tm('Нет соединения с ПК',1);btn.disabled=false;btn.innerHTML='Открыть на ПК'
+$('btnDL').onclick=function(){
+  if(!entries.length){tm('Нет записей',1);return}
+  var b=xl();var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='cheki.xlsx';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);tm('Файл скачан')
+};
+
+$('btnUpload').onclick=function(){
+  if(!entries.length){tm('Нет записей',1);return}
+  var btn=this;btn.disabled=true;btn.textContent='Загрузка...';
+  
+  // Создаём .xlsx blob
+  var blob=xl();
+  var file=new File([blob],'cheki.xlsx',{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  
+  // Пробуем через fetch (если CORS поддерживается)
+  var fd=new FormData();
+  fd.append('file',file);
+  
+  var apiUrl='https://dropmefiles.com/upload';
+  
+  fetch(apiUrl,{method:'POST',body:fd})
+  .then(function(r){
+    // Пытаемся получить URL из ответа
+    var url=r.url; // итоговый URL после редиректов
+    if(url && url!==apiUrl){
+      showLink(url);btn.disabled=false;btn.textContent='Загрузить на dropmefiles';
+    } else {
+      return r.text().then(function(t){
+        // Ищем ссылку в тексте ответа
+        var m=t.match(/https?:\/\/dropmefiles\.com\/[a-zA-Z0-9]+/);
+        if(m){showLink(m[0]);btn.disabled=false;btn.textContent='Загрузить на dropmefiles'}
+        else throw new Error('Не удалось получить ссылку')
+      });
+    }
+  })
+  .catch(function(e){
+    // Если CORS не работает - показываем инструкцию
+    $('uploadStatus').textContent='Браузер не может загрузить напрямую. Сохраните файл и загрузите вручную на dropmefiles.com';
+    $('uploadStatus').style.color='#991b1b';
+    btn.disabled=false;btn.textContent='Загрузить на dropmefiles'
   });
 };
 
+function showLink(url){
+  $('fileLink').textContent=url;
+  $('linkCard').classList.remove('hidden');
+  $('uploadStatus').textContent='';
+}
+
+$('btnCopyLink').onclick=function(){
+  var url=$('fileLink').textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(url);tm('Ссылка скопирована')}
+  else{tm('Выделите и скопируйте ссылку')}
+};
+$('btnCloseLink').onclick=function(){$('linkCard').classList.add('hidden')};
 $('btnClear').onclick=function(){if(!confirm('Удалить всё?'))return;entries=[];localStorage.setItem('q','[]');rt();tm('Очищено')};
 rt();
 </script>

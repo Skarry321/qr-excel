@@ -215,7 +215,7 @@ async function startScan() {
     await html5QrCode.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 250 } },
-      function(text) { if (scanning) { stopScan(); showResult(text); } },
+      function(text) { if (scanning) { scanning = false; stopScan(); showResult(text); } },
       function() {}
     );
     scanning = true;
@@ -279,11 +279,9 @@ _('btnSend').onclick = function() {
     _('btnSend').disabled = false;
     _('btnSend').innerHTML = 'Отправить в Telegram';
     if (err) {
-      _('tgError').textContent = 'Ошибка: ' + err;
-      _('tgError').style.display = 'block';
-      entries.pop();
-      localStorage.setItem('qr_entries', JSON.stringify(entries));
-      renderTable();
+      _('resultCard').classList.add('hidden');
+      lastData = null;
+      toast('Ошибка: ' + err, 1);
     } else {
       toast('Отправлено!');
       _('resultCard').classList.add('hidden');
@@ -298,11 +296,9 @@ _('btnSkip').onclick = function() {
   if (!entry) return;
   sendToTG(entry, function(err) {
     if (err) {
-      _('tgError').textContent = 'Ошибка: ' + err;
-      _('tgError').style.display = 'block';
-      entries.pop();
-      localStorage.setItem('qr_entries', JSON.stringify(entries));
-      renderTable();
+      _('resultCard').classList.add('hidden');
+      lastData = null;
+      toast('Ошибка: ' + err, 1);
     } else {
       toast('Отправлено!');
       _('resultCard').classList.add('hidden');

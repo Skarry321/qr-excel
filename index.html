@@ -5,166 +5,196 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="QRв†’Excel">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234361ee'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3Eрџ“„%3C/text%3E%3C/svg%3E">
-<title>QR в†’ Excel</title>
+<meta name="apple-mobile-web-app-title" content="QR-Excel">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234361ee'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3E%F0%9F%93%84%3C/text%3E%3C/svg%3E">
+<title>QR → Excel</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 12px 20px;max-width:500px;margin:0 auto;-webkit-tap-highlight-color:transparent}
-h1{font-size:20px;font-weight:700;text-align:center;padding:14px 0 10px}
-.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin:4px 0;transition:.15s;color:#fff}
-.btn:active{opacity:.6}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 16px 24px;max-width:480px;margin:0 auto;-webkit-tap-highlight-color:transparent}
+.header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 12px}
+.header h1{font-size:22px;font-weight:700;background:linear-gradient(135deg,#4361ee,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.conn-status{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500}
+.conn-status.on{background:#d1fae5;color:#065f46}
+.conn-status.off{background:#fee2e2;color:#991b1b}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.card-title{font-size:13px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin:5px 0;transition:transform .1s,opacity .15s;color:#fff;touch-action:manipulation}
+.btn:active{transform:scale(.97);opacity:.8}
 .btn-primary{background:#4361ee}
 .btn-success{background:#34c759}
-.btn-danger{background:#ff3b30}
-.btn-gray{background:#8e8e93}
-.btn-outline{background:#fff;color:#4361ee;border:2px solid #4361ee}
-.scanner-wrap{position:relative;width:100%;aspect-ratio:1/1;max-height:340px;overflow:hidden;border-radius:12px;background:#000;display:none}
+.btn-danger{background:#ff3b30;color:#fff}
+.btn-gray{background:#f2f2f7;color:#1c1c1e;font-weight:500}
+.scanner-wrap{position:relative;width:100%;aspect-ratio:1/1;max-height:360px;overflow:hidden;border-radius:14px;background:#000;display:none;margin-bottom:4px}
 .scanner-wrap.active{display:block}
-#reader video{border-radius:12px;width:100%!important;height:auto!important}
+#reader video{border-radius:14px;width:100%!important;height:auto!important}
 #reader{width:100%!important;min-height:auto!important;border:none!important}
 #reader__scan_region{min-height:auto!important}
 #reader__dashboard_section{display:none}
-.status{text-align:center;font-size:14px;padding:6px 0;color:#8e8e93}
-.status.ok{color:#34c759;font-weight:600}
-.status.err{color:#ff3b30;font-weight:600}
-.field{width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:10px;font-size:15px;outline:none;margin:4px 0;background:#f9f9f9}
+.status{text-align:center;font-size:13px;padding:8px 0;color:#8e8e93}
+.field{width:100%;padding:12px 14px;border:2px solid #e5e5ea;border-radius:12px;font-size:16px;outline:none;margin:4px 0;background:#f9f9f9;transition:border .2s}
 .field:focus{border-color:#4361ee;background:#fff}
-.label{font-size:12px;font-weight:600;color:#8e8e93;margin:6px 0 2px;display:block}
-.preview{background:#f2f2f7;border-radius:10px;padding:12px;margin:6px 0;font-size:14px;line-height:1.7}
-.preview strong{color:#4361ee;font-weight:600}
-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
-th,td{padding:7px 5px;text-align:left;border-bottom:1px solid #e5e5ea}
-th{background:#f2f2f7;font-size:10px;text-transform:uppercase;color:#8e8e93;font-weight:600}
-.table-wrap{max-height:280px;overflow-y:auto;border-radius:10px;border:1px solid #e5e5ea}
-.empty{padding:24px;text-align:center;color:#8e8e93;font-size:13px}
+.label{font-size:13px;font-weight:600;color:#8e8e93;margin:8px 0 4px;display:block}
+.preview{background:#f2f2f7;border-radius:12px;padding:12px 14px;margin:6px 0;font-size:14px;line-height:1.8}
+.preview strong{color:#4361ee}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid #f2f2f7}
+th{font-size:11px;text-transform:uppercase;color:#8e8e93;font-weight:600;background:#fafafa;position:sticky;top:0}
+td{font-size:13px}
+.table-wrap{max-height:300px;overflow-y:auto;border-radius:12px;border:1px solid #f2f2f7}
+.empty{padding:28px 16px;text-align:center;color:#aeaeb2;font-size:14px;line-height:1.5}
 .hidden{display:none!important}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90%;box-shadow:0 4px 20px rgba(0,0,0,.2)}
 .toast.show{opacity:1}
-.badge{display:inline-block;background:#4361ee;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px}
-.actions{display:flex;gap:6px}
-.actions button{flex:1}
-.tab-bar{display:flex;gap:0;margin-bottom:10px;background:#e5e5ea;border-radius:10px;overflow:hidden}
-.tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;border:none;background:transparent;color:#8e8e93;cursor:pointer;transition:.2s}
-.tab.active{background:#fff;color:#4361ee;border-radius:9px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.s-group{margin:4px 0}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#4361ee;color:#fff;font-size:11px;font-weight:700}
+.row{display:flex;gap:8px}
+.row .btn{flex:1}
+.del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px;line-height:1}
 .s-group label{font-size:13px;font-weight:600;color:#8e8e93;margin:8px 0 4px;display:block}
-.s-group input{width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:10px;font-size:15px;outline:none;background:#f9f9f9}
+.s-group input{width:100%;padding:12px 14px;border:2px solid #e5e5ea;border-radius:12px;font-size:15px;outline:none;background:#f9f9f9}
 .s-group input:focus{border-color:#4361ee;background:#fff}
-.s-group .hint{font-size:11px;color:#8e8e93;margin:2px 0 0}
-@supports(padding:max(0px)){body{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));padding-bottom:max(20px,env(safe-area-inset-bottom))}}
+.s-group .hint{font-size:11px;color:#aeaeb2;margin:3px 0 0}
+.section{display:none}.section.active{display:block}
+.icon{display:inline-block;font-size:18px;line-height:1;margin-right:4px}
+.tabs{display:flex;gap:0;margin-bottom:12px;background:#e5e5ea;border-radius:10px;overflow:hidden;padding:2px}
+.tab{flex:1;padding:8px 0;text-align:center;font-size:13px;font-weight:600;border:none;background:transparent;color:#8e8e93;cursor:pointer;border-radius:8px;transition:.2s}
+.tab.active{background:#fff;color:#4361ee;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.result-actions{margin-top:8px}
+.error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 12px;margin:6px 0;font-size:13px;color:#991b1b;display:none}
 </style>
 </head>
 <body>
 
-<h1>рџ“„ QR в†’ Excel</h1>
-
-<div class="tab-bar">
-  <button class="tab active" data-tab="scan">рџ“· РЎРєР°РЅ</button>
-  <button class="tab" data-tab="list">рџ“‹ РЎРїРёСЃРѕРє</button>
-  <button class="tab" data-tab="cfg">вљ™пёЏ</button>
+<div class="header">
+  <h1>QR → Excel</h1>
+  <span class="conn-status" id="connStatus">&#9679; ПРОВЕРКА</span>
 </div>
 
-<!-- SCAN -->
-<div id="tabScan" class="tab-content">
+<div class="tabs">
+  <button class="tab active" data-tab="scanTab">СКАН</button>
+  <button class="tab" data-tab="listTab">ЧЕКИ</button>
+  <button class="tab" data-tab="cfgTab">НАСТРОЙКИ</button>
+</div>
+
+<!-- SCAN TAB -->
+<div id="scanTab" class="section active">
   <div class="card">
-    <button class="btn btn-primary" id="btnScan">рџ“· РЎРєР°РЅРёСЂРѕРІР°С‚СЊ С‡РµРє</button>
+    <button class="btn btn-primary" id="btnScan">
+      <span class="icon">&#128247;</span> Сканировать чек
+    </button>
     <div class="scanner-wrap" id="scannerWrap">
       <div id="reader"></div>
-      <p class="status" id="scanStatus">РќР°РІРµРґРёС‚Рµ РєР°РјРµСЂСѓ РЅР° QR-РєРѕРґ</p>
-      <button class="btn btn-danger" id="btnStop">вњ• Р—Р°РєСЂС‹С‚СЊ</button>
+      <p class="status" id="scanStatus">Наведите камеру на QR-код</p>
+      <button class="btn btn-gray" id="btnStop">&#10005; Закрыть камеру</button>
     </div>
   </div>
+
   <div class="card hidden" id="resultCard">
-    <p style="font-weight:600;margin-bottom:6px">вњ… Р Р°СЃРїРѕР·РЅР°РЅРѕ</p>
+    <div class="card-title">РАСПОЗНАНО</div>
     <div class="preview" id="preview"></div>
-    <label class="label">рџ“¦ РќР°РёРјРµРЅРѕРІР°РЅРёРµ С‚РѕРІР°СЂР°</label>
-    <input class="field" id="fieldProduct" placeholder="Р’РІРµРґРёС‚Рµ РЅР°РёРјРµРЅРѕРІР°РЅРёРµ..." autocomplete="off">
-    <button class="btn btn-success" id="btnSend">рџ“Ё РћС‚РїСЂР°РІРёС‚СЊ РІ Telegram</button>
-    <button class="btn btn-outline" id="btnSkip">вЏ­ РџСЂРѕРїСѓСЃС‚РёС‚СЊ (Р±РµР· С‚РѕРІР°СЂР°)</button>
-    <button class="btn btn-gray" id="btnCancel">вњ• РћС‚РјРµРЅР°</button>
+    <div class="error-box" id="tgError"></div>
+    <label class="label">Наименование товара</label>
+    <input class="field" id="fieldProduct" placeholder="Например: Молоко, хлеб..." autocomplete="off">
+    <div class="result-actions">
+      <button class="btn btn-success" id="btnSend">&#128228; Отправить в Telegram</button>
+      <button class="btn btn-gray" id="btnSkip">Пропустить (без названия)</button>
+      <button class="btn btn-gray" id="btnCancel">Отмена</button>
+    </div>
   </div>
 </div>
 
-<!-- LIST -->
-<div id="tabList" class="tab-content hidden">
+<!-- LIST TAB -->
+<div id="listTab" class="section">
   <div class="card">
-    <p style="font-weight:600;font-size:14px;margin-bottom:6px">рџ“‹ Р—Р°РїРёСЃРё <span class="badge" id="countBadge">0</span></p>
+    <div class="card-title">ОТПРАВЛЕННЫЕ ЧЕКИ <span class="badge" id="countBadge">0</span></div>
     <div class="table-wrap">
-      <table><thead><tr><th>#</th><th>Р”Р°С‚Р°</th><th>РќР°РёРјРµРЅРѕРІР°РЅРёРµ</th><th>РЎСѓРјРјР°</th><th></th></tr></thead>
+      <table><thead><tr><th>#</th><th>Дата</th><th>Наименование</th><th>Сумма</th><th></th></tr></thead>
       <tbody id="tbody"></tbody></table>
-      <div class="empty" id="emptyMsg">РќРµС‚ Р·Р°РїРёСЃРµР№</div>
+      <div class="empty" id="emptyMsg">Нет записей</div>
     </div>
-    <div id="listActions" class="hidden" style="margin-top:8px">
-      <button class="btn btn-success" id="btnExportTG">рџ“Ё РћС‚РїСЂР°РІРёС‚СЊ .xlsx РІ Telegram</button>
-      <button class="btn btn-primary" id="btnExportLocal">рџ“Ґ РЎРєР°С‡Р°С‚СЊ .xlsx РЅР° С‚РµР»РµС„РѕРЅ</button>
-      <button class="btn btn-danger" id="btnClear">рџ—‘ РћС‡РёСЃС‚РёС‚СЊ</button>
+    <div id="listActions" class="hidden">
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-success" id="btnExportTG">&#128228; .xlsx</button>
+        <button class="btn btn-primary" id="btnExportLocal">&#128190; Скачать</button>
+      </div>
+      <button class="btn btn-danger" id="btnClear">Очистить все</button>
     </div>
   </div>
 </div>
 
-<!-- SETTINGS -->
-<div id="tabCfg" class="tab-content hidden">
+<!-- SETTINGS TAB -->
+<div id="cfgTab" class="section">
   <div class="card">
-    <p style="font-weight:600;margin-bottom:8px">рџ¤– Telegram Р±РѕС‚</p>
+    <div class="card-title">ПОДКЛЮЧЕНИЕ К TELEGRAM</div>
     <div class="s-group">
-      <label>Token Р±РѕС‚Р°</label>
-      <input type="text" id="cfgToken" placeholder="1234567890:ABCdefGHIjkl...">
-      <div class="hint">РџРѕР»СѓС‡РёС‚СЊ Сѓ @BotFather РІ Telegram в†’ /newbot</div>
+      <label>Токен бота</label>
+      <input type="text" id="cfgToken" placeholder="1234567890:ABCdef...">
+      <div class="hint">@BotFather → /newbot</div>
     </div>
     <div class="s-group">
-      <label>Chat ID (РІР°С€ Telegram ID)</label>
+      <label>Chat ID (ваш ID)</label>
       <input type="text" id="cfgChatId" placeholder="123456789">
-      <div class="hint">РЈР·РЅР°С‚СЊ Сѓ @userinfobot в†’ /start</div>
+      <div class="hint">@userinfobot → /start</div>
     </div>
-    <button class="btn btn-primary" id="btnSaveCfg">рџ’ѕ РЎРѕС…СЂР°РЅРёС‚СЊ</button>
-    <button class="btn btn-outline" id="btnTestTG">рџ“Ё РўРµСЃС‚</button>
-    <div class="status" id="cfgStatus"></div>
+    <button class="btn btn-primary" id="btnSaveCfg">Сохранить</button>
+    <button class="btn btn-outline" id="btnTestTG">Проверить подключение</button>
+    <div class="status" id="cfgStatus" style="font-size:13px"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const TG_URL = 'https://api.telegram.org/bot';
+const TG = 'https://api.telegram.org/bot';
+
 let entries = JSON.parse(localStorage.getItem('qr_entries') || '[]');
 let config = JSON.parse(localStorage.getItem('qr_config') || '{"token":"8816604840:AAGhrlFMgrz71sNgKxhgPnJvdmu0gbjtYEw","chatId":"8881681054"}');
 let html5QrCode = null;
 let scanning = false;
 let lastData = null;
+let tTimer = null;
 
 const $ = id => document.getElementById(id);
-let toastTimer = null;
 
-function t(msg, err) {
-  clearTimeout(toastTimer);
+function toast(msg, err) {
+  clearTimeout(tTimer);
   const el = $('toast');
-  el.textContent = msg; el.style.background = err ? '#ff3b30' : '#1c1c1e';
+  el.textContent = msg;
+  el.style.background = err ? '#ff3b30' : '#1c1c1e';
   el.classList.add('show');
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  tTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
+// --- Tabs ---
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  };
+});
+
+// --- QR Parser ---
 function parseQR(text) {
   const d = { date: '', sum: '', number: '' };
   try {
     const p = text.startsWith('http') ? new URL(text).searchParams : new URLSearchParams(text);
     d.number = p.get('i') || p.get('fd') || '';
     d.sum = p.get('s') || '';
-    const tVal = p.get('t') || '';
-    if (tVal) { const m = tVal.match(/^(\d{4})(\d{2})(\d{2})/); if (m) d.date = m[3]+'.'+m[2]+'.'+m[1]; }
+    const t = p.get('t') || '';
+    if (t) { const m = t.match(/^(\d{4})(\d{2})(\d{2})/); if (m) d.date = m[3]+'.'+m[2]+'.'+m[1]; }
   } catch(e) {}
   return d;
 }
 
+// --- Scanner ---
 async function startScan() {
   if (scanning) return;
   try {
     $('scannerWrap').classList.add('active');
-    $('scanStatus').textContent = 'вЏі Р—Р°РїСѓСЃРє РєР°РјРµСЂС‹...';
-    $('scanStatus').className = 'status';
+    $('scanStatus').textContent = 'Запуск камеры...';
     html5QrCode = new Html5Qrcode("reader");
     await html5QrCode.start(
       { facingMode: "environment" },
@@ -173,47 +203,55 @@ async function startScan() {
       () => {}
     );
     scanning = true;
-    $('scanStatus').textContent = 'рџ“· РќР°РІРµРґРёС‚Рµ РЅР° QR-РєРѕРґ С‡РµРєР°';
+    $('scanStatus').textContent = 'Наведите камеру на QR-код чека';
   } catch(e) {
-    $('scanStatus').textContent = 'вќЊ ' + e.message;
-    $('scanStatus').className = 'status err';
+    $('scanStatus').textContent = 'Ошибка: ' + e.message;
     setTimeout(() => $('scannerWrap').classList.remove('active'), 2000);
   }
 }
 
 async function stopScan() {
   if (html5QrCode) { try { await html5QrCode.stop(); html5QrCode.clear(); } catch(e) {} html5QrCode = null; }
-  scanning = false; $('scannerWrap').classList.remove('active');
+  scanning = false;
+  $('scannerWrap').classList.remove('active');
 }
 
 function showResult(raw) {
   lastData = parseQR(raw);
-  $('preview').innerHTML = `<strong>рџ“… Р”Р°С‚Р°:</strong> ${lastData.date||'вЂ”'}<br><strong>рџ’° РЎСѓРјРјР°:</strong> ${lastData.sum||'вЂ”'}<br><strong>рџ”ў в„–:</strong> ${lastData.number||'вЂ”'}`;
+  $('preview').innerHTML =
+    '<strong>Дата:</strong> ' + (lastData.date || '—') + '<br>' +
+    '<strong>Сумма:</strong> ' + (lastData.sum || '—') + '<br>' +
+    '<strong>Номер ФД:</strong> ' + (lastData.number || '—');
   $('fieldProduct').value = '';
+  $('tgError').style.display = 'none';
   $('resultCard').classList.remove('hidden');
-  setTimeout(() => $('fieldProduct').focus(), 300);
+  document.querySelector('[data-tab="scanTab"]').click();
 }
 
-async function sendToTG(entry) {
-  const msg = `рџ“„ Р§РµРє #${entries.length+1}\nрџ“… Р”Р°С‚Р°: ${entry.date||'вЂ”'}\nрџ“¦ РўРѕРІР°СЂ: ${entry.product||'вЂ”'}\nрџ’° РЎСѓРјРјР°: ${entry.sum||'вЂ”'}`;
-  const r = await fetch(`${TG_URL}${config.token}/sendMessage`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({chat_id: config.chatId, text: msg})
-  });
-  return r.json();
-}
+// --- Telegram ---
+async function sendToTG(entry, cb) {
+  const msg =
+    'Чек #' + (entries.length) + '\n' +
+    'Дата: ' + (entry.date || '—') + '\n' +
+    'Товар: ' + (entry.product || '—') + '\n' +
+    'Сумма: ' + (entry.sum || '—');
 
-async function sendDocTG(blob, name) {
-  const fd = new FormData();
-  fd.append('chat_id', config.chatId);
-  fd.append('document', blob, name);
-  fd.append('caption', `рџ“Љ QRв†’Excel: ${entries.length} Р·Р°РїРёСЃРµР№`);
-  const r = await fetch(`${TG_URL}${config.token}/sendDocument`, {method:'POST', body: fd});
-  return r.json();
+  try {
+    const r = await fetch(TG + config.token + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'chat_id=' + config.chatId + '&text=' + encodeURIComponent(msg)
+    });
+    const j = await r.json();
+    if (j.ok) return cb(null);
+    return cb(j.description || 'Ошибка');
+  } catch(e) {
+    return cb('Нет соединения с Telegram. Проверьте интернет на телефоне');
+  }
 }
 
 function addEntry(product) {
-  if (!lastData) return;
+  if (!lastData) return null;
   const entry = { date: lastData.date, sum: lastData.sum, number: lastData.number, product: product||'' };
   entries.push(entry);
   localStorage.setItem('qr_entries', JSON.stringify(entries));
@@ -221,119 +259,182 @@ function addEntry(product) {
   return entry;
 }
 
-function genXLSX() {
-  const wb = XLSX.utils.book_new();
-  const data = [['в„–','Р”Р°С‚Р°','РќР°РёРјРµРЅРѕРІР°РЅРёРµ','РЎСѓРјРјР°']];
-  entries.forEach((e,i) => data.push([i+1, e.date||'', e.product||'', e.sum ? (parseFloat(e.sum)||e.sum) : '']));
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Р§РµРєРё');
-  return XLSX.write(wb, {bookType:'xlsx', type:'array'});
-}
-
-$('btnSend').onclick = async () => {
-  if (!config.token || !config.chatId) { t('вќЊ РЎРЅР°С‡Р°Р»Р° РЅР°СЃС‚СЂРѕР№С‚Рµ Р±РѕС‚Р° (вљ™пёЏ)', 1); return; }
-  const entry = addEntry($('fieldProduct').value.trim());
+$('btnSend').onclick = () => {
+  if (!config.token || !config.chatId) { toast('Настройте бота во вкладке НАСТРОЙКИ', 1); return; }
+  const p = $('fieldProduct').value.trim();
+  const entry = addEntry(p);
   if (!entry) return;
-  try {
-    const res = await sendToTG(entry);
-    if (res.ok) { t('вњ“ РћС‚РїСЂР°РІР»РµРЅРѕ РІ Telegram'); $('resultCard').classList.add('hidden'); lastData = null; }
-    else { t('вќЊ ' + (res.description||'?'), 1); entries.pop(); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); }
-  } catch(e) { t('вќЊ '+e.message, 1); }
+  $('btnSend').disabled = true;
+  $('btnSend').textContent = 'Отправка...';
+  sendToTG(entry, function(err) {
+    $('btnSend').disabled = false;
+    $('btnSend').innerHTML = '&#128228; Отправить в Telegram';
+    if (err) {
+      $('tgError').textContent = 'Ошибка Telegram: ' + err;
+      $('tgError').style.display = 'block';
+      entries.pop();
+      localStorage.setItem('qr_entries', JSON.stringify(entries));
+      renderTable();
+    } else {
+      toast('Отправлено!');
+      $('resultCard').classList.add('hidden');
+      lastData = null;
+    }
+  });
 };
 
-$('btnSkip').onclick = async () => {
-  if (!config.token || !config.chatId) { t('вќЊ РќР°СЃС‚СЂРѕР№С‚Рµ Р±РѕС‚Р° (вљ™пёЏ)', 1); return; }
+$('btnSkip').onclick = () => {
+  if (!config.token || !config.chatId) { toast('Настройте бота во вкладке НАСТРОЙКИ', 1); return; }
   const entry = addEntry('');
   if (!entry) return;
-  try {
-    const res = await sendToTG(entry);
-    if (res.ok) { t('вњ“ РћС‚РїСЂР°РІР»РµРЅРѕ'); $('resultCard').classList.add('hidden'); lastData = null; }
-    else { t('вќЊ '+(res.description||'?'),1); entries.pop(); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); }
-  } catch(e) { t('вќЊ '+e.message,1); }
+  sendToTG(entry, function(err) {
+    if (err) {
+      $('tgError').textContent = 'Ошибка Telegram: ' + err;
+      $('tgError').style.display = 'block';
+      entries.pop();
+      localStorage.setItem('qr_entries', JSON.stringify(entries));
+      renderTable();
+    } else {
+      toast('Отправлено!');
+      $('resultCard').classList.add('hidden');
+      lastData = null;
+    }
+  });
 };
 
 $('btnCancel').onclick = () => { $('resultCard').classList.add('hidden'); lastData = null; };
 
 function renderTable() {
-  const tb=$('tbody'), em=$('emptyMsg'), la=$('listActions');
-  tb.innerHTML = ''; $('countBadge').textContent = entries.length;
+  const tb = $('tbody'), em = $('emptyMsg'), la = $('listActions');
+  tb.innerHTML = '';
+  $('countBadge').textContent = entries.length;
   if (!entries.length) { em.classList.remove('hidden'); la.classList.add('hidden'); return; }
   em.classList.add('hidden'); la.classList.remove('hidden');
-  entries.forEach((e,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${e.date||'вЂ”'}</td><td>${e.product||'вЂ”'}</td><td>${e.sum||'вЂ”'}</td><td><button class="del" data-i="${i}" style="padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px">вњ•</button></td>`;
+  entries.forEach(function(e,i) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+(i+1)+'</td><td>'+(e.date||'—')+'</td><td>'+(e.product||'—')+'</td><td>'+(e.sum||'—')+'</td><td><button class="del-btn" data-i="'+i+'">&#10005;</button></td>';
     tb.appendChild(tr);
   });
-  tb.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { entries.splice(+b.dataset.i,1); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); });
+  tb.querySelectorAll('.del-btn').forEach(function(b) {
+    b.onclick = function() {
+      entries.splice(+this.dataset.i,1);
+      localStorage.setItem('qr_entries', JSON.stringify(entries));
+      renderTable();
+    };
+  });
 }
 
 $('btnScan').onclick = startScan;
 $('btnStop').onclick = stopScan;
 
-$('btnExportTG').onclick = async () => {
-  if (!entries.length) { t('вќЊ РќРµС‚ Р·Р°РїРёСЃРµР№',1); return; }
-  if (!config.token||!config.chatId) { t('вќЊ РќР°СЃС‚СЂРѕР№С‚Рµ Р±РѕС‚Р° (вљ™пёЏ)',1); return; }
-  try {
-    const blob = new Blob([genXLSX()], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    const res = await sendDocTG(blob, 'cheki.xlsx');
-    if (res.ok) t('вњ“ .xlsx РѕС‚РїСЂР°РІР»РµРЅ РІ Telegram');
-    else t('вќЊ '+(res.description||'?'),1);
-  } catch(e) { t('вќЊ '+e.message,1); }
+$('btnExportTG').onclick = function() {
+  if (!entries.length) { toast('Нет записей', 1); return; }
+  if (!config.token||!config.chatId) { toast('Настройте бота', 1); return; }
+  var wb = XLSX.utils.book_new();
+  var data = [['№','Дата','Наименование','Сумма']];
+  entries.forEach(function(e,i){ data.push([i+1, e.date||'', e.product||'', e.sum||'']); });
+  var ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Чеки');
+  var out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  var blob = new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  var fd = new FormData();
+  fd.append('chat_id', config.chatId);
+  fd.append('document', blob, 'cheki.xlsx');
+  fd.append('caption', 'QR-Excel: ' + entries.length + ' записей');
+  fetch(TG + config.token + '/sendDocument', {method:'POST', body: fd})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j.ok) toast('Excel отправлен в Telegram');
+      else toast('Ошибка: ' + (j.description||'?'), 1);
+    })
+    .catch(function(){ toast('Ошибка отправки', 1); });
 };
 
-$('btnExportLocal').onclick = () => {
-  if (!entries.length) { t('вќЊ РќРµС‚ Р·Р°РїРёСЃРµР№',1); return; }
-  const blob = new Blob([genXLSX()], {type:'application/octet-stream'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'cheki.xlsx';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+$('btnExportLocal').onclick = function() {
+  if (!entries.length) { toast('Нет записей', 1); return; }
+  var wb = XLSX.utils.book_new();
+  var data = [['№','Дата','Наименование','Сумма']];
+  entries.forEach(function(e,i){ data.push([i+1, e.date||'', e.product||'', e.sum||'']); });
+  var ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Чеки');
+  var out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  var blob = new Blob([out], {type:'application/octet-stream'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'cheki.xlsx';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  t('рџ“Ґ Р¤Р°Р№Р» cheki.xlsx СЃРєР°С‡Р°РЅ');
+  toast('Файл cheki.xlsx скачан');
 };
 
-$('btnClear').onclick = () => {
-  if (!confirm('РЈРґР°Р»РёС‚СЊ РІСЃРµ Р·Р°РїРёСЃРё?')) return;
-  entries = []; localStorage.setItem('qr_entries','[]'); renderTable(); t('рџ—‘ РћС‡РёС‰РµРЅРѕ');
+$('btnClear').onclick = function() {
+  if (!confirm('Удалить все записи?')) return;
+  entries = [];
+  localStorage.setItem('qr_entries', '[]');
+  renderTable();
+  toast('Очищено');
 };
-
-// Tabs
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    tab.classList.add('active');
-    document.getElementById('tab'+tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)).classList.remove('hidden');
-  };
-});
 
 // Settings
 $('cfgToken').value = config.token;
 $('cfgChatId').value = config.chatId;
 
-$('btnSaveCfg').onclick = () => {
+$('btnSaveCfg').onclick = function() {
   config.token = $('cfgToken').value.trim();
   config.chatId = $('cfgChatId').value.trim();
   localStorage.setItem('qr_config', JSON.stringify(config));
-  $('cfgStatus').textContent = 'вњ“ РЎРѕС…СЂР°РЅРµРЅРѕ';
-  $('cfgStatus').className = 'status ok';
-  setTimeout(() => $('cfgStatus').textContent='', 2000);
+  $('cfgStatus').textContent = 'Сохранено';
+  setTimeout(function(){ $('cfgStatus').textContent = ''; }, 2000);
 };
 
-$('btnTestTG').onclick = async () => {
-  if (!config.token || !config.chatId) { t('вќЊ Р—Р°РїРѕР»РЅРёС‚Рµ token Рё chat ID',1); return; }
-  try {
-    const r = await fetch(`${TG_URL}${config.token}/sendMessage`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({chat_id:config.chatId, text:'вњ… QRв†’Excel: С‚РµСЃС‚'})
-    });
-    const j = await r.json();
-    if (j.ok) t('вњ“ РЎРѕРѕР±С‰РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ! РџСЂРѕРІРµСЂСЊС‚Рµ Telegram');
-    else t('вќЊ '+j.description, 1);
-  } catch(e) { t('вќЊ '+e.message, 1); }
+$('btnTestTG').onclick = function() {
+  if (!config.token || !config.chatId) { toast('Заполните токен и Chat ID', 1); return; }
+  var el = $('cfgStatus');
+  el.textContent = 'Проверка...';
+  fetch(TG + config.token + '/sendMessage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'chat_id=' + config.chatId + '&text=' + encodeURIComponent('QR-Excel: подключение работает')
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if (j.ok) {
+      el.textContent = 'Подключение работает! Проверьте Telegram';
+      el.style.color = '#065f46';
+      toast('Сообщение отправлено!');
+    } else {
+      el.textContent = 'Ошибка: ' + (j.description||'?');
+      el.style.color = '#991b1b';
+    }
+  })
+  .catch(function() {
+    el.textContent = 'Нет соединения с Telegram';
+    el.style.color = '#991b1b';
+  });
 };
+
+// Connection check
+function checkConn() {
+  var el = $('connStatus');
+  if (!config.token) { el.textContent = 'НЕТ ТОКЕНА'; el.className = 'conn-status off'; return; }
+  fetch(TG + config.token + '/getMe')
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j.ok) { el.textContent = 'ONLINE'; el.className = 'conn-status on'; }
+      else { el.textContent = 'ОШИБКА'; el.className = 'conn-status off'; }
+    })
+    .catch(function(){
+      el.textContent = 'OFFLINE';
+      el.className = 'conn-status off';
+    });
+}
 
 renderTable();
+checkConn();
+setInterval(checkConn, 30000);
 </script>
 </body>
 </html>

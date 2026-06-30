@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="QR→Excel">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234361ee'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3E📄%3C/text%3E%3C/svg%3E">
-<title>QR → Excel</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"><\/script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"><\/script>
+<meta name="apple-mobile-web-app-title" content="QRв†’Excel">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234361ee'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3Eрџ“„%3C/text%3E%3C/svg%3E">
+<title>QR в†’ Excel</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 12px 20px;max-width:500px;margin:0 auto;-webkit-tap-highlight-color:transparent}
@@ -60,48 +60,48 @@ th{background:#f2f2f7;font-size:10px;text-transform:uppercase;color:#8e8e93;font
 </head>
 <body>
 
-<h1>📄 QR → Excel</h1>
+<h1>рџ“„ QR в†’ Excel</h1>
 
 <div class="tab-bar">
-  <button class="tab active" data-tab="scan">📷 Скан</button>
-  <button class="tab" data-tab="list">📋 Список</button>
-  <button class="tab" data-tab="cfg">⚙️</button>
+  <button class="tab active" data-tab="scan">рџ“· РЎРєР°РЅ</button>
+  <button class="tab" data-tab="list">рџ“‹ РЎРїРёСЃРѕРє</button>
+  <button class="tab" data-tab="cfg">вљ™пёЏ</button>
 </div>
 
 <!-- SCAN -->
 <div id="tabScan" class="tab-content">
   <div class="card">
-    <button class="btn btn-primary" id="btnScan">📷 Сканировать чек</button>
+    <button class="btn btn-primary" id="btnScan">рџ“· РЎРєР°РЅРёСЂРѕРІР°С‚СЊ С‡РµРє</button>
     <div class="scanner-wrap" id="scannerWrap">
       <div id="reader"></div>
-      <p class="status" id="scanStatus">Наведите камеру на QR-код</p>
-      <button class="btn btn-danger" id="btnStop">✕ Закрыть</button>
+      <p class="status" id="scanStatus">РќР°РІРµРґРёС‚Рµ РєР°РјРµСЂСѓ РЅР° QR-РєРѕРґ</p>
+      <button class="btn btn-danger" id="btnStop">вњ• Р—Р°РєСЂС‹С‚СЊ</button>
     </div>
   </div>
   <div class="card hidden" id="resultCard">
-    <p style="font-weight:600;margin-bottom:6px">✅ Распознано</p>
+    <p style="font-weight:600;margin-bottom:6px">вњ… Р Р°СЃРїРѕР·РЅР°РЅРѕ</p>
     <div class="preview" id="preview"></div>
-    <label class="label">📦 Наименование товара</label>
-    <input class="field" id="fieldProduct" placeholder="Введите наименование..." autocomplete="off">
-    <button class="btn btn-success" id="btnSend">📨 Отправить в Telegram</button>
-    <button class="btn btn-outline" id="btnSkip">⏭ Пропустить (без товара)</button>
-    <button class="btn btn-gray" id="btnCancel">✕ Отмена</button>
+    <label class="label">рџ“¦ РќР°РёРјРµРЅРѕРІР°РЅРёРµ С‚РѕРІР°СЂР°</label>
+    <input class="field" id="fieldProduct" placeholder="Р’РІРµРґРёС‚Рµ РЅР°РёРјРµРЅРѕРІР°РЅРёРµ..." autocomplete="off">
+    <button class="btn btn-success" id="btnSend">рџ“Ё РћС‚РїСЂР°РІРёС‚СЊ РІ Telegram</button>
+    <button class="btn btn-outline" id="btnSkip">вЏ­ РџСЂРѕРїСѓСЃС‚РёС‚СЊ (Р±РµР· С‚РѕРІР°СЂР°)</button>
+    <button class="btn btn-gray" id="btnCancel">вњ• РћС‚РјРµРЅР°</button>
   </div>
 </div>
 
 <!-- LIST -->
 <div id="tabList" class="tab-content hidden">
   <div class="card">
-    <p style="font-weight:600;font-size:14px;margin-bottom:6px">📋 Записи <span class="badge" id="countBadge">0</span></p>
+    <p style="font-weight:600;font-size:14px;margin-bottom:6px">рџ“‹ Р—Р°РїРёСЃРё <span class="badge" id="countBadge">0</span></p>
     <div class="table-wrap">
-      <table><thead><tr><th>#</th><th>Дата</th><th>Наименование</th><th>Сумма</th><th></th></tr></thead>
+      <table><thead><tr><th>#</th><th>Р”Р°С‚Р°</th><th>РќР°РёРјРµРЅРѕРІР°РЅРёРµ</th><th>РЎСѓРјРјР°</th><th></th></tr></thead>
       <tbody id="tbody"></tbody></table>
-      <div class="empty" id="emptyMsg">Нет записей</div>
+      <div class="empty" id="emptyMsg">РќРµС‚ Р·Р°РїРёСЃРµР№</div>
     </div>
     <div id="listActions" class="hidden" style="margin-top:8px">
-      <button class="btn btn-success" id="btnExportTG">📨 Отправить .xlsx в Telegram</button>
-      <button class="btn btn-primary" id="btnExportLocal">📥 Скачать .xlsx на телефон</button>
-      <button class="btn btn-danger" id="btnClear">🗑 Очистить</button>
+      <button class="btn btn-success" id="btnExportTG">рџ“Ё РћС‚РїСЂР°РІРёС‚СЊ .xlsx РІ Telegram</button>
+      <button class="btn btn-primary" id="btnExportLocal">рџ“Ґ РЎРєР°С‡Р°С‚СЊ .xlsx РЅР° С‚РµР»РµС„РѕРЅ</button>
+      <button class="btn btn-danger" id="btnClear">рџ—‘ РћС‡РёСЃС‚РёС‚СЊ</button>
     </div>
   </div>
 </div>
@@ -109,19 +109,19 @@ th{background:#f2f2f7;font-size:10px;text-transform:uppercase;color:#8e8e93;font
 <!-- SETTINGS -->
 <div id="tabCfg" class="tab-content hidden">
   <div class="card">
-    <p style="font-weight:600;margin-bottom:8px">🤖 Telegram бот</p>
+    <p style="font-weight:600;margin-bottom:8px">рџ¤– Telegram Р±РѕС‚</p>
     <div class="s-group">
-      <label>Token бота</label>
+      <label>Token Р±РѕС‚Р°</label>
       <input type="text" id="cfgToken" placeholder="1234567890:ABCdefGHIjkl...">
-      <div class="hint">Получить у @BotFather в Telegram → /newbot</div>
+      <div class="hint">РџРѕР»СѓС‡РёС‚СЊ Сѓ @BotFather РІ Telegram в†’ /newbot</div>
     </div>
     <div class="s-group">
-      <label>Chat ID (ваш Telegram ID)</label>
+      <label>Chat ID (РІР°С€ Telegram ID)</label>
       <input type="text" id="cfgChatId" placeholder="123456789">
-      <div class="hint">Узнать у @userinfobot → /start</div>
+      <div class="hint">РЈР·РЅР°С‚СЊ Сѓ @userinfobot в†’ /start</div>
     </div>
-    <button class="btn btn-primary" id="btnSaveCfg">💾 Сохранить</button>
-    <button class="btn btn-outline" id="btnTestTG">📨 Тест</button>
+    <button class="btn btn-primary" id="btnSaveCfg">рџ’ѕ РЎРѕС…СЂР°РЅРёС‚СЊ</button>
+    <button class="btn btn-outline" id="btnTestTG">рџ“Ё РўРµСЃС‚</button>
     <div class="status" id="cfgStatus"></div>
   </div>
 </div>
@@ -163,7 +163,7 @@ async function startScan() {
   if (scanning) return;
   try {
     $('scannerWrap').classList.add('active');
-    $('scanStatus').textContent = '⏳ Запуск камеры...';
+    $('scanStatus').textContent = 'вЏі Р—Р°РїСѓСЃРє РєР°РјРµСЂС‹...';
     $('scanStatus').className = 'status';
     html5QrCode = new Html5Qrcode("reader");
     await html5QrCode.start(
@@ -173,9 +173,9 @@ async function startScan() {
       () => {}
     );
     scanning = true;
-    $('scanStatus').textContent = '📷 Наведите на QR-код чека';
+    $('scanStatus').textContent = 'рџ“· РќР°РІРµРґРёС‚Рµ РЅР° QR-РєРѕРґ С‡РµРєР°';
   } catch(e) {
-    $('scanStatus').textContent = '❌ ' + e.message;
+    $('scanStatus').textContent = 'вќЊ ' + e.message;
     $('scanStatus').className = 'status err';
     setTimeout(() => $('scannerWrap').classList.remove('active'), 2000);
   }
@@ -188,14 +188,14 @@ async function stopScan() {
 
 function showResult(raw) {
   lastData = parseQR(raw);
-  $('preview').innerHTML = `<strong>📅 Дата:</strong> ${lastData.date||'—'}<br><strong>💰 Сумма:</strong> ${lastData.sum||'—'}<br><strong>🔢 №:</strong> ${lastData.number||'—'}`;
+  $('preview').innerHTML = `<strong>рџ“… Р”Р°С‚Р°:</strong> ${lastData.date||'вЂ”'}<br><strong>рџ’° РЎСѓРјРјР°:</strong> ${lastData.sum||'вЂ”'}<br><strong>рџ”ў в„–:</strong> ${lastData.number||'вЂ”'}`;
   $('fieldProduct').value = '';
   $('resultCard').classList.remove('hidden');
   setTimeout(() => $('fieldProduct').focus(), 300);
 }
 
 async function sendToTG(entry) {
-  const msg = `📄 Чек #${entries.length+1}\n📅 Дата: ${entry.date||'—'}\n📦 Товар: ${entry.product||'—'}\n💰 Сумма: ${entry.sum||'—'}`;
+  const msg = `рџ“„ Р§РµРє #${entries.length+1}\nрџ“… Р”Р°С‚Р°: ${entry.date||'вЂ”'}\nрџ“¦ РўРѕРІР°СЂ: ${entry.product||'вЂ”'}\nрџ’° РЎСѓРјРјР°: ${entry.sum||'вЂ”'}`;
   const r = await fetch(`${TG_URL}${config.token}/sendMessage`, {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({chat_id: config.chatId, text: msg})
@@ -207,7 +207,7 @@ async function sendDocTG(blob, name) {
   const fd = new FormData();
   fd.append('chat_id', config.chatId);
   fd.append('document', blob, name);
-  fd.append('caption', `📊 QR→Excel: ${entries.length} записей`);
+  fd.append('caption', `рџ“Љ QRв†’Excel: ${entries.length} Р·Р°РїРёСЃРµР№`);
   const r = await fetch(`${TG_URL}${config.token}/sendDocument`, {method:'POST', body: fd});
   return r.json();
 }
@@ -223,34 +223,34 @@ function addEntry(product) {
 
 function genXLSX() {
   const wb = XLSX.utils.book_new();
-  const data = [['№','Дата','Наименование','Сумма']];
+  const data = [['в„–','Р”Р°С‚Р°','РќР°РёРјРµРЅРѕРІР°РЅРёРµ','РЎСѓРјРјР°']];
   entries.forEach((e,i) => data.push([i+1, e.date||'', e.product||'', e.sum ? (parseFloat(e.sum)||e.sum) : '']));
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Чеки');
+  XLSX.utils.book_append_sheet(wb, ws, 'Р§РµРєРё');
   return XLSX.write(wb, {bookType:'xlsx', type:'array'});
 }
 
 $('btnSend').onclick = async () => {
-  if (!config.token || !config.chatId) { t('❌ Сначала настройте бота (⚙️)', 1); return; }
+  if (!config.token || !config.chatId) { t('вќЊ РЎРЅР°С‡Р°Р»Р° РЅР°СЃС‚СЂРѕР№С‚Рµ Р±РѕС‚Р° (вљ™пёЏ)', 1); return; }
   const entry = addEntry($('fieldProduct').value.trim());
   if (!entry) return;
   try {
     const res = await sendToTG(entry);
-    if (res.ok) { t('✓ Отправлено в Telegram'); $('resultCard').classList.add('hidden'); lastData = null; }
-    else { t('❌ ' + (res.description||'?'), 1); entries.pop(); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); }
-  } catch(e) { t('❌ '+e.message, 1); }
+    if (res.ok) { t('вњ“ РћС‚РїСЂР°РІР»РµРЅРѕ РІ Telegram'); $('resultCard').classList.add('hidden'); lastData = null; }
+    else { t('вќЊ ' + (res.description||'?'), 1); entries.pop(); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); }
+  } catch(e) { t('вќЊ '+e.message, 1); }
 };
 
 $('btnSkip').onclick = async () => {
-  if (!config.token || !config.chatId) { t('❌ Настройте бота (⚙️)', 1); return; }
+  if (!config.token || !config.chatId) { t('вќЊ РќР°СЃС‚СЂРѕР№С‚Рµ Р±РѕС‚Р° (вљ™пёЏ)', 1); return; }
   const entry = addEntry('');
   if (!entry) return;
   try {
     const res = await sendToTG(entry);
-    if (res.ok) { t('✓ Отправлено'); $('resultCard').classList.add('hidden'); lastData = null; }
-    else { t('❌ '+(res.description||'?'),1); entries.pop(); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); }
-  } catch(e) { t('❌ '+e.message,1); }
+    if (res.ok) { t('вњ“ РћС‚РїСЂР°РІР»РµРЅРѕ'); $('resultCard').classList.add('hidden'); lastData = null; }
+    else { t('вќЊ '+(res.description||'?'),1); entries.pop(); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); }
+  } catch(e) { t('вќЊ '+e.message,1); }
 };
 
 $('btnCancel').onclick = () => { $('resultCard').classList.add('hidden'); lastData = null; };
@@ -262,7 +262,7 @@ function renderTable() {
   em.classList.add('hidden'); la.classList.remove('hidden');
   entries.forEach((e,i) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${e.date||'—'}</td><td>${e.product||'—'}</td><td>${e.sum||'—'}</td><td><button class="del" data-i="${i}" style="padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px">✕</button></td>`;
+    tr.innerHTML = `<td>${i+1}</td><td>${e.date||'вЂ”'}</td><td>${e.product||'вЂ”'}</td><td>${e.sum||'вЂ”'}</td><td><button class="del" data-i="${i}" style="padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px">вњ•</button></td>`;
     tb.appendChild(tr);
   });
   tb.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { entries.splice(+b.dataset.i,1); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); });
@@ -272,29 +272,29 @@ $('btnScan').onclick = startScan;
 $('btnStop').onclick = stopScan;
 
 $('btnExportTG').onclick = async () => {
-  if (!entries.length) { t('❌ Нет записей',1); return; }
-  if (!config.token||!config.chatId) { t('❌ Настройте бота (⚙️)',1); return; }
+  if (!entries.length) { t('вќЊ РќРµС‚ Р·Р°РїРёСЃРµР№',1); return; }
+  if (!config.token||!config.chatId) { t('вќЊ РќР°СЃС‚СЂРѕР№С‚Рµ Р±РѕС‚Р° (вљ™пёЏ)',1); return; }
   try {
     const blob = new Blob([genXLSX()], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const res = await sendDocTG(blob, 'cheki.xlsx');
-    if (res.ok) t('✓ .xlsx отправлен в Telegram');
-    else t('❌ '+(res.description||'?'),1);
-  } catch(e) { t('❌ '+e.message,1); }
+    if (res.ok) t('вњ“ .xlsx РѕС‚РїСЂР°РІР»РµРЅ РІ Telegram');
+    else t('вќЊ '+(res.description||'?'),1);
+  } catch(e) { t('вќЊ '+e.message,1); }
 };
 
 $('btnExportLocal').onclick = () => {
-  if (!entries.length) { t('❌ Нет записей',1); return; }
+  if (!entries.length) { t('вќЊ РќРµС‚ Р·Р°РїРёСЃРµР№',1); return; }
   const blob = new Blob([genXLSX()], {type:'application/octet-stream'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'cheki.xlsx';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  t('📥 Файл cheki.xlsx скачан');
+  t('рџ“Ґ Р¤Р°Р№Р» cheki.xlsx СЃРєР°С‡Р°РЅ');
 };
 
 $('btnClear').onclick = () => {
-  if (!confirm('Удалить все записи?')) return;
-  entries = []; localStorage.setItem('qr_entries','[]'); renderTable(); t('🗑 Очищено');
+  if (!confirm('РЈРґР°Р»РёС‚СЊ РІСЃРµ Р·Р°РїРёСЃРё?')) return;
+  entries = []; localStorage.setItem('qr_entries','[]'); renderTable(); t('рџ—‘ РћС‡РёС‰РµРЅРѕ');
 };
 
 // Tabs
@@ -315,25 +315,25 @@ $('btnSaveCfg').onclick = () => {
   config.token = $('cfgToken').value.trim();
   config.chatId = $('cfgChatId').value.trim();
   localStorage.setItem('qr_config', JSON.stringify(config));
-  $('cfgStatus').textContent = '✓ Сохранено';
+  $('cfgStatus').textContent = 'вњ“ РЎРѕС…СЂР°РЅРµРЅРѕ';
   $('cfgStatus').className = 'status ok';
   setTimeout(() => $('cfgStatus').textContent='', 2000);
 };
 
 $('btnTestTG').onclick = async () => {
-  if (!config.token || !config.chatId) { t('❌ Заполните token и chat ID',1); return; }
+  if (!config.token || !config.chatId) { t('вќЊ Р—Р°РїРѕР»РЅРёС‚Рµ token Рё chat ID',1); return; }
   try {
     const r = await fetch(`${TG_URL}${config.token}/sendMessage`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({chat_id:config.chatId, text:'✅ QR→Excel: тест'})
+      body: JSON.stringify({chat_id:config.chatId, text:'вњ… QRв†’Excel: С‚РµСЃС‚'})
     });
     const j = await r.json();
-    if (j.ok) t('✓ Сообщение отправлено! Проверьте Telegram');
-    else t('❌ '+j.description, 1);
-  } catch(e) { t('❌ '+e.message, 1); }
+    if (j.ok) t('вњ“ РЎРѕРѕР±С‰РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ! РџСЂРѕРІРµСЂСЊС‚Рµ Telegram');
+    else t('вќЊ '+j.description, 1);
+  } catch(e) { t('вќЊ '+e.message, 1); }
 };
 
 renderTable();
-<\/script>
+</script>
 </body>
 </html>

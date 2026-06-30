@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="QR→Excel">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234361ee'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3E📄%3C/text%3E%3C/svg%3E">
+<title>QR → Excel</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"><\/script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"><\/script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 12px 20px;max-width:500px;margin:0 auto;-webkit-tap-highlight-color:transparent}
+h1{font-size:20px;font-weight:700;text-align:center;padding:14px 0 10px}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin:4px 0;transition:.15s;color:#fff}
+.btn:active{opacity:.6}
+.btn-primary{background:#4361ee}
+.btn-success{background:#34c759}
+.btn-danger{background:#ff3b30}
+.btn-gray{background:#8e8e93}
+.btn-outline{background:#fff;color:#4361ee;border:2px solid #4361ee}
+.scanner-wrap{position:relative;width:100%;aspect-ratio:1/1;max-height:340px;overflow:hidden;border-radius:12px;background:#000;display:none}
+.scanner-wrap.active{display:block}
+#reader video{border-radius:12px;width:100%!important;height:auto!important}
+#reader{width:100%!important;min-height:auto!important;border:none!important}
+#reader__scan_region{min-height:auto!important}
+#reader__dashboard_section{display:none}
+.status{text-align:center;font-size:14px;padding:6px 0;color:#8e8e93}
+.status.ok{color:#34c759;font-weight:600}
+.status.err{color:#ff3b30;font-weight:600}
+.field{width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:10px;font-size:15px;outline:none;margin:4px 0;background:#f9f9f9}
+.field:focus{border-color:#4361ee;background:#fff}
+.label{font-size:12px;font-weight:600;color:#8e8e93;margin:6px 0 2px;display:block}
+.preview{background:#f2f2f7;border-radius:10px;padding:12px;margin:6px 0;font-size:14px;line-height:1.7}
+.preview strong{color:#4361ee;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+th,td{padding:7px 5px;text-align:left;border-bottom:1px solid #e5e5ea}
+th{background:#f2f2f7;font-size:10px;text-transform:uppercase;color:#8e8e93;font-weight:600}
+.table-wrap{max-height:280px;overflow-y:auto;border-radius:10px;border:1px solid #e5e5ea}
+.empty{padding:24px;text-align:center;color:#8e8e93;font-size:13px}
+.hidden{display:none!important}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.badge{display:inline-block;background:#4361ee;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px}
+.actions{display:flex;gap:6px}
+.actions button{flex:1}
+.tab-bar{display:flex;gap:0;margin-bottom:10px;background:#e5e5ea;border-radius:10px;overflow:hidden}
+.tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;border:none;background:transparent;color:#8e8e93;cursor:pointer;transition:.2s}
+.tab.active{background:#fff;color:#4361ee;border-radius:9px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.s-group{margin:4px 0}
+.s-group label{font-size:13px;font-weight:600;color:#8e8e93;margin:8px 0 4px;display:block}
+.s-group input{width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:10px;font-size:15px;outline:none;background:#f9f9f9}
+.s-group input:focus{border-color:#4361ee;background:#fff}
+.s-group .hint{font-size:11px;color:#8e8e93;margin:2px 0 0}
+@supports(padding:max(0px)){body{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));padding-bottom:max(20px,env(safe-area-inset-bottom))}}
+</style>
+</head>
+<body>
+
+<h1>📄 QR → Excel</h1>
+
+<div class="tab-bar">
+  <button class="tab active" data-tab="scan">📷 Скан</button>
+  <button class="tab" data-tab="list">📋 Список</button>
+  <button class="tab" data-tab="cfg">⚙️</button>
+</div>
+
+<!-- SCAN -->
+<div id="tabScan" class="tab-content">
+  <div class="card">
+    <button class="btn btn-primary" id="btnScan">📷 Сканировать чек</button>
+    <div class="scanner-wrap" id="scannerWrap">
+      <div id="reader"></div>
+      <p class="status" id="scanStatus">Наведите камеру на QR-код</p>
+      <button class="btn btn-danger" id="btnStop">✕ Закрыть</button>
+    </div>
+  </div>
+  <div class="card hidden" id="resultCard">
+    <p style="font-weight:600;margin-bottom:6px">✅ Распознано</p>
+    <div class="preview" id="preview"></div>
+    <label class="label">📦 Наименование товара</label>
+    <input class="field" id="fieldProduct" placeholder="Введите наименование..." autocomplete="off">
+    <button class="btn btn-success" id="btnSend">📨 Отправить в Telegram</button>
+    <button class="btn btn-outline" id="btnSkip">⏭ Пропустить (без товара)</button>
+    <button class="btn btn-gray" id="btnCancel">✕ Отмена</button>
+  </div>
+</div>
+
+<!-- LIST -->
+<div id="tabList" class="tab-content hidden">
+  <div class="card">
+    <p style="font-weight:600;font-size:14px;margin-bottom:6px">📋 Записи <span class="badge" id="countBadge">0</span></p>
+    <div class="table-wrap">
+      <table><thead><tr><th>#</th><th>Дата</th><th>Наименование</th><th>Сумма</th><th></th></tr></thead>
+      <tbody id="tbody"></tbody></table>
+      <div class="empty" id="emptyMsg">Нет записей</div>
+    </div>
+    <div id="listActions" class="hidden" style="margin-top:8px">
+      <button class="btn btn-success" id="btnExportTG">📨 Отправить .xlsx в Telegram</button>
+      <button class="btn btn-primary" id="btnExportLocal">📥 Скачать .xlsx на телефон</button>
+      <button class="btn btn-danger" id="btnClear">🗑 Очистить</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="tabCfg" class="tab-content hidden">
+  <div class="card">
+    <p style="font-weight:600;margin-bottom:8px">🤖 Telegram бот</p>
+    <div class="s-group">
+      <label>Token бота</label>
+      <input type="text" id="cfgToken" placeholder="1234567890:ABCdefGHIjkl...">
+      <div class="hint">Получить у @BotFather в Telegram → /newbot</div>
+    </div>
+    <div class="s-group">
+      <label>Chat ID (ваш Telegram ID)</label>
+      <input type="text" id="cfgChatId" placeholder="123456789">
+      <div class="hint">Узнать у @userinfobot → /start</div>
+    </div>
+    <button class="btn btn-primary" id="btnSaveCfg">💾 Сохранить</button>
+    <button class="btn btn-outline" id="btnTestTG">📨 Тест</button>
+    <div class="status" id="cfgStatus"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TG_URL = 'https://api.telegram.org/bot';
+let entries = JSON.parse(localStorage.getItem('qr_entries') || '[]');
+let config = JSON.parse(localStorage.getItem('qr_config') || '{"token":"8816604840:AAGhrlFMgrz71sNgKxhgPnJvdmu0gbjtYEw","chatId":"8881681054"}');
+let html5QrCode = null;
+let scanning = false;
+let lastData = null;
+
+const $ = id => document.getElementById(id);
+let toastTimer = null;
+
+function t(msg, err) {
+  clearTimeout(toastTimer);
+  const el = $('toast');
+  el.textContent = msg; el.style.background = err ? '#ff3b30' : '#1c1c1e';
+  el.classList.add('show');
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function parseQR(text) {
+  const d = { date: '', sum: '', number: '' };
+  try {
+    const p = text.startsWith('http') ? new URL(text).searchParams : new URLSearchParams(text);
+    d.number = p.get('i') || p.get('fd') || '';
+    d.sum = p.get('s') || '';
+    const tVal = p.get('t') || '';
+    if (tVal) { const m = tVal.match(/^(\d{4})(\d{2})(\d{2})/); if (m) d.date = m[3]+'.'+m[2]+'.'+m[1]; }
+  } catch(e) {}
+  return d;
+}
+
+async function startScan() {
+  if (scanning) return;
+  try {
+    $('scannerWrap').classList.add('active');
+    $('scanStatus').textContent = '⏳ Запуск камеры...';
+    $('scanStatus').className = 'status';
+    html5QrCode = new Html5Qrcode("reader");
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      text => { if (scanning) { stopScan(); showResult(text); } },
+      () => {}
+    );
+    scanning = true;
+    $('scanStatus').textContent = '📷 Наведите на QR-код чека';
+  } catch(e) {
+    $('scanStatus').textContent = '❌ ' + e.message;
+    $('scanStatus').className = 'status err';
+    setTimeout(() => $('scannerWrap').classList.remove('active'), 2000);
+  }
+}
+
+async function stopScan() {
+  if (html5QrCode) { try { await html5QrCode.stop(); html5QrCode.clear(); } catch(e) {} html5QrCode = null; }
+  scanning = false; $('scannerWrap').classList.remove('active');
+}
+
+function showResult(raw) {
+  lastData = parseQR(raw);
+  $('preview').innerHTML = `<strong>📅 Дата:</strong> ${lastData.date||'—'}<br><strong>💰 Сумма:</strong> ${lastData.sum||'—'}<br><strong>🔢 №:</strong> ${lastData.number||'—'}`;
+  $('fieldProduct').value = '';
+  $('resultCard').classList.remove('hidden');
+  setTimeout(() => $('fieldProduct').focus(), 300);
+}
+
+async function sendToTG(entry) {
+  const msg = `📄 Чек #${entries.length+1}\n📅 Дата: ${entry.date||'—'}\n📦 Товар: ${entry.product||'—'}\n💰 Сумма: ${entry.sum||'—'}`;
+  const r = await fetch(`${TG_URL}${config.token}/sendMessage`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({chat_id: config.chatId, text: msg})
+  });
+  return r.json();
+}
+
+async function sendDocTG(blob, name) {
+  const fd = new FormData();
+  fd.append('chat_id', config.chatId);
+  fd.append('document', blob, name);
+  fd.append('caption', `📊 QR→Excel: ${entries.length} записей`);
+  const r = await fetch(`${TG_URL}${config.token}/sendDocument`, {method:'POST', body: fd});
+  return r.json();
+}
+
+function addEntry(product) {
+  if (!lastData) return;
+  const entry = { date: lastData.date, sum: lastData.sum, number: lastData.number, product: product||'' };
+  entries.push(entry);
+  localStorage.setItem('qr_entries', JSON.stringify(entries));
+  renderTable();
+  return entry;
+}
+
+function genXLSX() {
+  const wb = XLSX.utils.book_new();
+  const data = [['№','Дата','Наименование','Сумма']];
+  entries.forEach((e,i) => data.push([i+1, e.date||'', e.product||'', e.sum ? (parseFloat(e.sum)||e.sum) : '']));
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Чеки');
+  return XLSX.write(wb, {bookType:'xlsx', type:'array'});
+}
+
+$('btnSend').onclick = async () => {
+  if (!config.token || !config.chatId) { t('❌ Сначала настройте бота (⚙️)', 1); return; }
+  const entry = addEntry($('fieldProduct').value.trim());
+  if (!entry) return;
+  try {
+    const res = await sendToTG(entry);
+    if (res.ok) { t('✓ Отправлено в Telegram'); $('resultCard').classList.add('hidden'); lastData = null; }
+    else { t('❌ ' + (res.description||'?'), 1); entries.pop(); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); }
+  } catch(e) { t('❌ '+e.message, 1); }
+};
+
+$('btnSkip').onclick = async () => {
+  if (!config.token || !config.chatId) { t('❌ Настройте бота (⚙️)', 1); return; }
+  const entry = addEntry('');
+  if (!entry) return;
+  try {
+    const res = await sendToTG(entry);
+    if (res.ok) { t('✓ Отправлено'); $('resultCard').classList.add('hidden'); lastData = null; }
+    else { t('❌ '+(res.description||'?'),1); entries.pop(); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); }
+  } catch(e) { t('❌ '+e.message,1); }
+};
+
+$('btnCancel').onclick = () => { $('resultCard').classList.add('hidden'); lastData = null; };
+
+function renderTable() {
+  const tb=$('tbody'), em=$('emptyMsg'), la=$('listActions');
+  tb.innerHTML = ''; $('countBadge').textContent = entries.length;
+  if (!entries.length) { em.classList.remove('hidden'); la.classList.add('hidden'); return; }
+  em.classList.add('hidden'); la.classList.remove('hidden');
+  entries.forEach((e,i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${e.date||'—'}</td><td>${e.product||'—'}</td><td>${e.sum||'—'}</td><td><button class="del" data-i="${i}" style="padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { entries.splice(+b.dataset.i,1); localStorage.setItem('qr_entries',JSON.stringify(entries)); renderTable(); });
+}
+
+$('btnScan').onclick = startScan;
+$('btnStop').onclick = stopScan;
+
+$('btnExportTG').onclick = async () => {
+  if (!entries.length) { t('❌ Нет записей',1); return; }
+  if (!config.token||!config.chatId) { t('❌ Настройте бота (⚙️)',1); return; }
+  try {
+    const blob = new Blob([genXLSX()], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const res = await sendDocTG(blob, 'cheki.xlsx');
+    if (res.ok) t('✓ .xlsx отправлен в Telegram');
+    else t('❌ '+(res.description||'?'),1);
+  } catch(e) { t('❌ '+e.message,1); }
+};
+
+$('btnExportLocal').onclick = () => {
+  if (!entries.length) { t('❌ Нет записей',1); return; }
+  const blob = new Blob([genXLSX()], {type:'application/octet-stream'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'cheki.xlsx';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  t('📥 Файл cheki.xlsx скачан');
+};
+
+$('btnClear').onclick = () => {
+  if (!confirm('Удалить все записи?')) return;
+  entries = []; localStorage.setItem('qr_entries','[]'); renderTable(); t('🗑 Очищено');
+};
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    tab.classList.add('active');
+    document.getElementById('tab'+tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)).classList.remove('hidden');
+  };
+});
+
+// Settings
+$('cfgToken').value = config.token;
+$('cfgChatId').value = config.chatId;
+
+$('btnSaveCfg').onclick = () => {
+  config.token = $('cfgToken').value.trim();
+  config.chatId = $('cfgChatId').value.trim();
+  localStorage.setItem('qr_config', JSON.stringify(config));
+  $('cfgStatus').textContent = '✓ Сохранено';
+  $('cfgStatus').className = 'status ok';
+  setTimeout(() => $('cfgStatus').textContent='', 2000);
+};
+
+$('btnTestTG').onclick = async () => {
+  if (!config.token || !config.chatId) { t('❌ Заполните token и chat ID',1); return; }
+  try {
+    const r = await fetch(`${TG_URL}${config.token}/sendMessage`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({chat_id:config.chatId, text:'✅ QR→Excel: тест'})
+    });
+    const j = await r.json();
+    if (j.ok) t('✓ Сообщение отправлено! Проверьте Telegram');
+    else t('❌ '+j.description, 1);
+  } catch(e) { t('❌ '+e.message, 1); }
+};
+
+renderTable();
+<\/script>
+</body>
+</html>

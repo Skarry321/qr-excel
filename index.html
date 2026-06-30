@@ -15,74 +15,44 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 16px 24px;max-width:480px;margin:0 auto;-webkit-tap-highlight-color:transparent}
-h1{font-size:24px;font-weight:700;padding:16px 0 2px;background:linear-gradient(135deg,#4361ee,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center}
-.sub{font-size:13px;color:#8e8e93;text-align:center;margin-bottom:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 16px 24px;max-width:480px;margin:0 auto}
+h1{font-size:24px;font-weight:700;padding:16px 0 2px;text-align:center;background:linear-gradient(135deg,#4361ee,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin:5px 0;color:#fff;touch-action:manipulation;transition:opacity .15s}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin:4px 0;color:#fff}
 .btn:active{opacity:.6}
 .btn-primary{background:#4361ee}
 .btn-success{background:#34c759}
 .btn-danger{background:#ff3b30}
-.btn-gray{background:#f2f2f7;color:#1c1c1e;font-weight:500}
-.scanner-wrap{position:relative;width:100%;aspect-ratio:1/1;max-height:360px;overflow:hidden;border-radius:14px;background:#000;display:none;margin-bottom:4px}
+.btn-gray{background:#f2f2f7;color:#1c1c1e}
+.scanner-wrap{position:relative;width:100%;aspect-ratio:1/1;max-height:360px;overflow:hidden;border-radius:14px;background:#000;display:none}
 .scanner-wrap.active{display:block}
 #reader video{border-radius:14px;width:100%!important;height:auto!important}
-#reader{width:100%!important;min-height:auto!important;border:none!important}
+#reader{width:100%!important;min-height:auto!important}
 #reader__scan_region{min-height:auto!important}
 #reader__dashboard_section{display:none}
-.status{text-align:center;font-size:13px;padding:6px 0;color:#8e8e93}
-.field{width:100%;padding:12px 14px;border:2px solid #e5e5ea;border-radius:12px;font-size:15px;outline:none;margin:4px 0;background:#f9f9f9}
-.field:focus{border-color:#4361ee;background:#fff}
-.label{font-size:13px;font-weight:600;color:#8e8e93;margin:6px 0 3px;display:block}
-.preview{background:#f2f2f7;border-radius:12px;padding:10px 14px;margin:4px 0;font-size:13px;line-height:1.7;word-break:break-all}
+.field{width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:12px;font-size:15px;outline:none;margin:4px 0;background:#f9f9f9}
+.field:focus{border-color:#4361ee}
+.preview{background:#f2f2f7;border-radius:12px;padding:10px;margin:4px 0;font-size:13px;line-height:1.7}
 .preview strong{color:#4361ee}
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:12px}
 th,td{padding:8px 6px;text-align:left;border-bottom:1px solid #f2f2f7}
-th{font-size:10px;text-transform:uppercase;color:#8e8e93;font-weight:600;background:#fafafa}
-td{font-size:12px}
+th{font-size:10px;color:#8e8e93;background:#fafafa}
 .table-wrap{max-height:240px;overflow-y:auto;border-radius:12px;border:1px solid #f2f2f7}
-.empty{padding:24px;text-align:center;color:#aeaeb2;font-size:14px}
+.empty{padding:24px;text-align:center;color:#aeaeb2}
 .hidden{display:none!important}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90%;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
-.badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#4361ee;color:#fff;font-size:11px;font-weight:700}
-.row{display:flex;gap:6px}.row .btn{flex:1}
-.del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px}
-.connect-card{background:#f0f7ff;border:1px solid #bddbff;border-radius:12px;padding:14px;margin-bottom:10px;text-align:center}
-.connect-card .title{font-weight:600;color:#1a404e;font-size:15px}
-.connect-card .url{color:#4361ee;font-weight:700;font-size:18px;margin:6px 0;word-break:break-all}
-.connect-card .hint{color:#8e8e93;font-size:12px;margin-top:4px}
-.qr-display{text-align:center;margin:8px 0}
-.qr-display img{border-radius:8px;max-width:180px;background:#fff;padding:4px}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
-.dot.green{background:#34c759}
-.dot.red{background:#ff3b30}
-.dot.yellow{background:#f59e0b}
-.status-bar{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;padding:8px;border-radius:10px;margin-bottom:8px}
-.status-bar.on{background:#d1fae5;color:#065f46}
-.status-bar.off{background:#fee2e2;color:#991b1b}
-.status-bar.wait{background:#fef3c7;color:#92400e}
+.del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;cursor:pointer;font-size:11px;font-weight:600}
+.status-msg{text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:8px}
+.status-msg.on{background:#d1fae5;color:#065f46}
+.status-msg.off{background:#fee2e2;color:#991b1b}
 </style>
 </head>
 <body>
 
 <h1>QR → Excel</h1>
-<p class="sub" id="subText">Отсканируйте QR с экрана ПК для подключения</p>
 
-<div class="connect-card" id="connCard">
-  <div class="status-bar wait" id="statusBar"><span class="dot yellow"></span> Ожидание подключения к ПК</div>
-  <div class="qr-display" id="qrScanArea">
-    <p style="font-size:13px;color:#8e8e93;margin-bottom:6px">Отсканируйте QR-код на экране ПК</p>
-    <button class="btn btn-primary" id="btnScanConn">&#128247; Сканировать QR с ПК</button>
-  </div>
-  <div id="connInfo" class="hidden">
-    <div class="url" id="serverUrl">—</div>
-    <div class="hint">Подключено. Теперь сканируйте чеки</div>
-  </div>
-</div>
-
-<div class="card hidden" id="mainCard">
+<div class="card">
   <button class="btn btn-primary" id="btnScan">&#128247; Сканировать чек</button>
   <div class="scanner-wrap" id="scannerWrap">
     <div id="reader"></div>
@@ -93,14 +63,14 @@ td{font-size:12px}
 
 <div class="card hidden" id="resultCard">
   <div class="preview" id="preview"></div>
-  <label class="label">Наименование товара</label>
+  <label style="font-size:13px;color:#8e8e93;margin:6px 0 3px;display:block">Наименование товара</label>
   <input class="field" id="fieldProduct" placeholder="Например: Молоко..." autocomplete="off">
   <button class="btn btn-success" id="btnSave">&#128190; Сохранить</button>
   <button class="btn btn-gray" id="btnSkip">Без названия</button>
   <button class="btn btn-gray" id="btnCancel">Отмена</button>
 </div>
 
-<div class="card hidden" id="listCard">
+<div class="card">
   <div class="table-wrap">
     <table><thead><tr><th>#</th><th>Дата</th><th>Товар</th><th>Сумма</th><th></th></tr></thead>
     <tbody id="tbody"></tbody></table>
@@ -108,7 +78,7 @@ td{font-size:12px}
   </div>
   <div id="actions" class="hidden" style="margin-top:8px">
     <button class="btn btn-success" id="btnOpenPC">&#128202; Открыть на ПК</button>
-    <button class="btn btn-primary" id="btnDLAll">&#128190; Скачать .xlsx</button>
+    <button class="btn btn-primary" id="btnDL">&#128190; Скачать .xlsx</button>
     <button class="btn btn-danger" id="btnClear">Очистить</button>
   </div>
 </div>
@@ -116,89 +86,34 @@ td{font-size:12px}
 <div class="toast" id="toast"></div>
 
 <script>
+var TG='https://api.telegram.org/bot8816604840:AAGhrlFMgrz71sNgKxhgPnJvdmu0gbjtYEw';
+var CHAT='8881681054';
 var entries=JSON.parse(localStorage.getItem('q')||'[]');
-var serverUrl=localStorage.getItem('sv')||null;
-var qr=null,sn=false,ld=null,tt=null;
+var qr=null,scanning=false,lastData=null,tt=null;
+var sending=false;
 
 function $(i){return document.getElementById(i)}
 function tm(m,e){clearTimeout(tt);var t=$('toast');t.textContent=m;t.style.background=e?'#ff3b30':'#1c1c1e';t.classList.add('show');tt=setTimeout(function(){t.classList.remove('show')},2500)}
-
 function pr(t){var d={date:'',sum:'',num:''};try{var p=t.startsWith('http')?new URL(t).searchParams:new URLSearchParams(t);d.num=p.get('i')||p.get('fd')||'';d.sum=p.get('s')||'';var v=p.get('t')||'';if(v){var m=v.match(/^(\d{4})(\d{2})(\d{2})/);if(m)d.date=m[3]+'.'+m[2]+'.'+m[1]}}catch(e){}return d}
-function xl(data,name){var wb=XLSX.utils.book_new();var d=[['№','Дата','Наименование','Сумма']];data.forEach(function(e,i){d.push([i+1,e.date||'',e.product||'',e.sum||''])});var ws=XLSX.utils.aoa_to_sheet(d);ws['!cols']=[{w:5},{w:14},{w:30},{w:12}];XLSX.utils.book_append_sheet(wb,ws,'Чеки');var out=XLSX.write(wb,{bookType:'xlsx',type:'array'});return new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
-function dl(blob,name){var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download=name||'cheki.xlsx';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+function xl(){var wb=XLSX.utils.book_new();var d=[['№','Дата','Наименование','Сумма']];entries.forEach(function(e,i){d.push([i+1,e.date||'',e.product||'',e.sum||''])});var ws=XLSX.utils.aoa_to_sheet(d);ws['!cols']=[{w:5},{w:14},{w:30},{w:12}];XLSX.utils.book_append_sheet(wb,ws,'Чеки');var out=XLSX.write(wb,{bookType:'xlsx',type:'array'});var b=new Blob([out],{type:'application/octet-stream'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='cheki.xlsx';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);return out}
 
-// ------ Connection ------
-function setConnected(url){
-  serverUrl=url;
-  localStorage.setItem('sv',url);
-  $('connCard').classList.add('hidden');
-  $('mainCard').classList.remove('hidden');
-  $('listCard').classList.remove('hidden');
-  $('subText').textContent='Сканируйте QR-код чека';
-  rt();
-  tm('Подключено к ПК!')
-}
-
-async function scanConnQR(){
-  if(sn)return;
-  $('scannerWrap').classList.add('active');
-  $('scanStatus').textContent='Наведите на QR с экрана ПК';
-  $('btnScanConn').classList.add('hidden');
-  try{
-    qr=new Html5Qrcode("reader");
-    await qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},
-      function(t){
-        if(!sn)return;
-        sn=false;sp();
-        // Проверяем, является ли QR ссылкой на ПК
-        if(t.startsWith('http://')||t.startsWith('https://')){
-          // Пробуем подключиться
-          fetch(t+'/ping').then(function(r){return r.text()}).then(function(txt){
-            if(txt=='pong')setConnected(t);
-            else {tm('Это не сервер QR→Excel. Сканируйте QR с экрана ПК',1);$('btnScanConn').classList.remove('hidden')}
-          }).catch(function(){
-            // Всё равно сохраняем как URL сервера
-            setConnected(t);
-          });
-        } else {tm('Это не ссылка. Сканируйте QR с экрана ПК',1);$('btnScanConn').classList.remove('hidden')}
-      },function(){});
-    sn=true;
-  }catch(e){tm('Ошибка камеры',1);$('btnScanConn').classList.remove('hidden')}
-}
-
-$('btnScanConn').onclick=scanConnQR;
-
-// ------ Receipt Scanner ------
 async function sc(){
-  if(sn)return;
+  if(scanning)return;
   $('scannerWrap').classList.add('active');
   $('scanStatus').textContent='Загрузка...';
   try{
     qr=new Html5Qrcode("reader");
-    $('scanStatus').textContent='Запуск камеры...';
     await qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},
-      function(t){if(sn){sn=false;sp();sr(t)}},function(){});
-    sn=true;$('scanStatus').textContent='Наведите камеру на QR-код чека'
+      function(t){if(scanning){scanning=false;sp();sr(t)}},function(){});
+    scanning=true;$('scanStatus').textContent='Наведите камеру на QR-код'
   }catch(e){$('scanStatus').textContent='Ошибка: '+e.message;setTimeout(function(){$('scannerWrap').classList.remove('active')},2000)}
 }
-function sp(){if(qr){try{qr.stop();qr.clear()}catch(e){}qr=null}sn=false;$('scannerWrap').classList.remove('active')}
-
-function sr(raw){
-  ld=pr(raw);
-  $('preview').innerHTML='<strong>Дата:</strong> '+(ld.date||'—')+'<br><strong>Сумма:</strong> '+(ld.sum||'—')+'<br><strong>Номер:</strong> '+(ld.num||'—');
-  $('fieldProduct').value='';$('resultCard').classList.remove('hidden');
-  setTimeout(function(){$('fieldProduct').focus()},300)
-}
-
-function ad(p){
-  if(!ld)return null;
-  var e={date:ld.date,sum:ld.sum,number:ld.num,product:p||''};
-  entries.push(e);localStorage.setItem('q',JSON.stringify(entries));rt();return e
-}
-
-$('btnSave').onclick=function(){if(ad($('fieldProduct').value.trim())){tm('Сохранено');$('resultCard').classList.add('hidden');ld=null}};
-$('btnSkip').onclick=function(){if(ad('')){tm('Сохранено');$('resultCard').classList.add('hidden');ld=null}};
-$('btnCancel').onclick=function(){$('resultCard').classList.add('hidden');ld=null};
+function sp(){if(qr){try{qr.stop();qr.clear()}catch(e){}qr=null}scanning=false;$('scannerWrap').classList.remove('active')}
+function sr(r){lastData=pr(r);$('preview').innerHTML='<strong>Дата:</strong> '+(lastData.date||'—')+'<br><strong>Сумма:</strong> '+(lastData.sum||'—')+'<br><strong>Номер:</strong> '+(lastData.num||'—');$('fieldProduct').value='';$('resultCard').classList.remove('hidden');setTimeout(function(){$('fieldProduct').focus()},300)}
+function ad(p){if(!lastData)return null;var e={date:lastData.date,sum:lastData.sum,number:lastData.num,product:p||''};entries.push(e);localStorage.setItem('q',JSON.stringify(entries));rt();return e}
+$('btnSave').onclick=function(){if(ad($('fieldProduct').value.trim())){tm('Сохранено');$('resultCard').classList.add('hidden');lastData=null}};
+$('btnSkip').onclick=function(){if(ad('')){tm('Сохранено');$('resultCard').classList.add('hidden');lastData=null}};
+$('btnCancel').onclick=function(){$('resultCard').classList.add('hidden');lastData=null};
 $('btnScan').onclick=sc;$('btnStop').onclick=sp;
 
 function rt(){
@@ -216,42 +131,28 @@ function rt(){
   })
 }
 
-$('btnDLAll').onclick=function(){
-  if(!entries.length){tm('Нет записей',1);return}
-  dl(xl(entries),'cheki.xlsx');tm('Файл скачан')
-};
+$('btnDL').onclick=function(){if(!entries.length){tm('Нет записей',1);return}xl();tm('Файл скачан')};
 
 $('btnOpenPC').onclick=function(){
-  if(!entries.length){tm('Нет записей',1);return}
-  if(!serverUrl){tm('Нет подключения к ПК',1);return}
-  var btn=this;btn.disabled=true;btn.innerHTML='Отправка...';
+  if(!entries.length||sending)return;
+  sending=true;var btn=this;btn.disabled=true;btn.innerHTML='Отправка...';
+  var data=JSON.stringify({entries:entries});
   
-  // Отправляем все данные на ПК
-  fetch(serverUrl+'/open',{
+  fetch(TG+'/sendMessage',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({entries:entries})
-  }).then(function(r){
-    if(r.ok){tm('Данные отправлены! Excel открывается на ПК');btn.disabled=false;btn.innerHTML='Открыть на ПК'}
-    else{tm('Ошибка сервера',1);btn.disabled=false;btn.innerHTML='Открыть на ПК'}
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'chat_id='+CHAT+'&text='+encodeURIComponent('DATA:'+data)
+  }).then(function(r){return r.json()}).then(function(j){
+    if(j.ok){tm('Отправлено! Excel откроется на ПК');}
+    else{tm('Ошибка: '+j.description,1)}
+    sending=false;btn.disabled=false;btn.innerHTML='Открыть на ПК'
   }).catch(function(){
-    tm('Нет соединения с ПК. Проверьте USB-модем',1);
-    btn.disabled=false;btn.innerHTML='Открыть на ПК'
+    tm('Нет интернета',1);sending=false;btn.disabled=false;btn.innerHTML='Открыть на ПК'
   });
 };
 
-$('btnClear').onclick=function(){
-  if(!confirm('Удалить всё?'))return;
-  entries=[];localStorage.setItem('q','[]');rt();tm('Очищено')
-};
-
-// ------ Init ------
-if(serverUrl){
-  setConnected(serverUrl);
-} else {
-  // Пробуем подключиться к последнему известному серверу
-  if(navigator.onLine){}
-}
+$('btnClear').onclick=function(){if(!confirm('Удалить всё?'))return;entries=[];localStorage.setItem('q','[]');rt();tm('Очищено')};
+rt();
 </script>
 </body>
 </html>

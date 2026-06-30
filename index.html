@@ -15,18 +15,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f2f2f7;color:#1c1c1e;padding:0 16px 24px;max-width:480px;margin:0 auto;-webkit-tap-highlight-color:transparent}
-.header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 12px}
-.header h1{font-size:22px;font-weight:700;background:linear-gradient(135deg,#4361ee,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.conn-status{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500}
-.conn-status.on{background:#d1fae5;color:#065f46}
-.conn-status.off{background:#fee2e2;color:#991b1b}
+h1{font-size:22px;font-weight:700;padding:18px 0 6px;background:linear-gradient(135deg,#4361ee,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center}
+.sub{font-size:13px;color:#8e8e93;text-align:center;margin-bottom:14px;padding:0 16px;line-height:1.5}
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
-.card-title{font-size:13px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin:5px 0;transition:transform .1s,opacity .15s;color:#fff;touch-action:manipulation}
-.btn:active{transform:scale(.97);opacity:.8}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin:5px 0;color:#fff;touch-action:manipulation;transition:opacity .15s}
+.btn:active{opacity:.6}
 .btn-primary{background:#4361ee}
 .btn-success{background:#34c759}
-.btn-danger{background:#ff3b30;color:#fff}
+.btn-danger{background:#ff3b30}
 .btn-gray{background:#f2f2f7;color:#1c1c1e;font-weight:500}
 .scanner-wrap{position:relative;width:100%;aspect-ratio:1/1;max-height:360px;overflow:hidden;border-radius:14px;background:#000;display:none;margin-bottom:4px}
 .scanner-wrap.active{display:block}
@@ -34,143 +30,110 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 #reader{width:100%!important;min-height:auto!important;border:none!important}
 #reader__scan_region{min-height:auto!important}
 #reader__dashboard_section{display:none}
-.status{text-align:center;font-size:13px;padding:8px 0;color:#8e8e93}
-.field{width:100%;padding:12px 14px;border:2px solid #e5e5ea;border-radius:12px;font-size:16px;outline:none;margin:4px 0;background:#f9f9f9;transition:border .2s}
+.field{width:100%;padding:12px 14px;border:2px solid #e5e5ea;border-radius:12px;font-size:16px;outline:none;margin:4px 0;background:#f9f9f9}
 .field:focus{border-color:#4361ee;background:#fff}
 .label{font-size:13px;font-weight:600;color:#8e8e93;margin:8px 0 4px;display:block}
 .preview{background:#f2f2f7;border-radius:12px;padding:12px 14px;margin:6px 0;font-size:14px;line-height:1.8}
 .preview strong{color:#4361ee}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:8px 6px;text-align:left;border-bottom:1px solid #f2f2f7}
-th{font-size:11px;text-transform:uppercase;color:#8e8e93;font-weight:600;background:#fafafa;position:sticky;top:0}
+th{font-size:11px;text-transform:uppercase;color:#8e8e93;font-weight:600;background:#fafafa}
 td{font-size:13px}
 .table-wrap{max-height:300px;overflow-y:auto;border-radius:12px;border:1px solid #f2f2f7}
-.empty{padding:28px 16px;text-align:center;color:#aeaeb2;font-size:14px;line-height:1.5}
+.empty{padding:24px;text-align:center;color:#aeaeb2;font-size:14px}
 .hidden{display:none!important}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90%;box-shadow:0 4px 20px rgba(0,0,0,.2)}
 .toast.show{opacity:1}
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#4361ee;color:#fff;font-size:11px;font-weight:700}
-.row{display:flex;gap:8px}
-.row .btn{flex:1}
-.del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px;line-height:1}
-.s-group label{font-size:13px;font-weight:600;color:#8e8e93;margin:8px 0 4px;display:block}
-.s-group input{width:100%;padding:12px 14px;border:2px solid #e5e5ea;border-radius:12px;font-size:15px;outline:none;background:#f9f9f9}
-.s-group input:focus{border-color:#4361ee;background:#fff}
-.s-group .hint{font-size:11px;color:#aeaeb2;margin:3px 0 0}
-.section{display:none}.section.active{display:block}
+.status-line{text-align:center;font-size:13px;padding:6px 0;color:#8e8e93}
+.conn-box{border-radius:12px;font-size:13px;text-align:center;margin:8px 0}
+.conn-box.on{background:#d1fae5;color:#065f46;padding:10px}
+.conn-box.off{background:#fee2e2;color:#991b1b;padding:10px}
+.conn-box.wait{background:#fef3c7;color:#92400e;padding:10px}
 .tabs{display:flex;gap:0;margin-bottom:12px;background:#e5e5ea;border-radius:10px;overflow:hidden;padding:2px}
 .tab{flex:1;padding:8px 0;text-align:center;font-size:13px;font-weight:600;border:none;background:transparent;color:#8e8e93;cursor:pointer;border-radius:8px;transition:.2s}
 .tab.active{background:#fff;color:#4361ee;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.result-actions{margin-top:8px}
-.error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 12px;margin:6px 0;font-size:13px;color:#991b1b;display:none}
+.section{display:none}.section.active{display:block}
+.row{display:flex;gap:8px}.row .btn{flex:1}
+.del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px;line-height:1}
+.error-msg{color:#991b1b;font-size:13px;margin:6px 0 0;display:none}
+.connection-screen{text-align:center;padding:30px 10px}
+.connection-screen .icon{font-size:48px;margin-bottom:12px;display:block}
+.connection-screen p{color:#8e8e93;font-size:14px;line-height:1.6;margin:6px 0}
+.connection-screen .btn{margin-top:12px}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>QR → Excel</h1>
-  <span class="conn-status" id="connStatus">&#9679; ПРОВЕРКА</span>
-</div>
+<h1>QR → Excel</h1>
+<p class="sub" id="subText">Подключите телефон к ПК по USB</p>
 
 <div class="tabs">
-  <button class="tab active" data-tab="scanTab">СКАН</button>
-  <button class="tab" data-tab="listTab">ЧЕКИ</button>
-  <button class="tab" data-tab="cfgTab">НАСТРОЙКИ</button>
+  <button class="tab active" data-tab="scan">СКАН</button>
+  <button class="tab" data-tab="list">СПИСОК</button>
 </div>
+
+<!-- CONNECTION SCREEN (shown when no server) -->
+<div id="connScreen" class="connection-screen">
+  <span class="icon">&#128268;</span>
+  <p>Подключите телефон к компьютеру<br>по USB-кабелю</p>
+  <p id="connHelp">Android: USB-модем в настройках<br>iPhone: Режим модема через USB</p>
+  <button class="btn btn-primary" id="btnRetryConn">&#128260; Поиск ПК</button>
+  <div class="conn-box wait" id="connStatusBox">Поиск сервера...</div>
+</div>
+
+<!-- MAIN APP (shown when connected) -->
+<div id="mainApp" class="hidden">
 
 <div id="scanTab" class="section active">
   <div class="card">
-    <button class="btn btn-primary" id="btnScan"><span class="icon">&#128247;</span> Сканировать чек</button>
+    <div class="conn-box on" id="serverInfo">&#9679; Подключено</div>
+    <button class="btn btn-primary" id="btnScan">&#128247; Сканировать чек</button>
     <div class="scanner-wrap" id="scannerWrap">
       <div id="reader"></div>
-      <p class="status" id="scanStatus">Наведите камеру на QR-код</p>
-      <button class="btn btn-gray" id="btnStop">&#10005; Закрыть камеру</button>
+      <p class="status-line" id="scanStatus">Наведите камеру на QR-код</p>
+      <button class="btn btn-gray" id="btnStop">&#10005; Закрыть</button>
     </div>
   </div>
+
   <div class="card hidden" id="resultCard">
-    <div class="card-title">РАСПОЗНАНО</div>
     <div class="preview" id="preview"></div>
-    <div class="error-box" id="tgError"></div>
     <label class="label">Наименование товара</label>
     <input class="field" id="fieldProduct" placeholder="Например: Молоко, хлеб..." autocomplete="off">
-    <div class="result-actions">
-      <button class="btn btn-success" id="btnSend">&#128228; Отправить в Telegram</button>
-      <button class="btn btn-gray" id="btnSkip">Пропустить (без названия)</button>
-      <button class="btn btn-gray" id="btnCancel">Отмена</button>
-    </div>
+    <div class="error-msg" id="errMsg"></div>
+    <button class="btn btn-success" id="btnSend">&#128228; Отправить на ПК</button>
+    <button class="btn btn-gray" id="btnSkip">Без названия</button>
+    <button class="btn btn-gray" id="btnCancel">Отмена</button>
   </div>
 </div>
 
 <div id="listTab" class="section">
   <div class="card">
-    <div class="card-title">ОТПРАВЛЕННЫЕ ЧЕКИ <span class="badge" id="countBadge">0</span></div>
     <div class="table-wrap">
-      <table><thead><tr><th>#</th><th>Дата</th><th>Наименование</th><th>Сумма</th><th></th></tr></thead>
+      <table><thead><tr><th>#</th><th>Дата</th><th>Товар</th><th>Сумма</th><th></th></tr></thead>
       <tbody id="tbody"></tbody></table>
       <div class="empty" id="emptyMsg">Нет записей</div>
     </div>
-    <div id="listActions" class="hidden">
-      <div class="row" style="margin-top:8px">
-        <button class="btn btn-success" id="btnExportTG">&#128228; .xlsx в Telegram</button>
-        <button class="btn btn-primary" id="btnExportLocal">&#128190; Скачать .xlsx</button>
-      </div>
-      <button class="btn btn-danger" id="btnClear">Очистить все</button>
+    <div id="listActions" class="hidden" style="margin-top:8px">
+      <button class="btn btn-primary" id="btnOpenExcel">&#128202; Открыть Excel на ПК</button>
+      <button class="btn btn-danger" id="btnClear">&#128465; Очистить</button>
     </div>
   </div>
 </div>
 
-<div id="cfgTab" class="section">
-  <div class="card">
-    <div class="card-title">ПОДКЛЮЧЕНИЕ К TELEGRAM</div>
-    <div class="s-group">
-      <label>Токен бота</label>
-      <input type="text" id="cfgToken" placeholder="1234567890:ABCdef...">
-      <div class="hint">@BotFather → /newbot</div>
-    </div>
-    <div class="s-group">
-      <label>Chat ID (ваш ID)</label>
-      <input type="text" id="cfgChatId" placeholder="123456789">
-      <div class="hint">@userinfobot → /start</div>
-    </div>
-    <button class="btn btn-primary" id="btnSaveCfg">Сохранить</button>
-    <button class="btn btn-outline" id="btnTestTG">Проверить подключение</button>
-    <div class="status" id="cfgStatus" style="font-size:13px"></div>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-var TG = 'https://api.telegram.org/bot';
+var BASE = null;
 var entries = JSON.parse(localStorage.getItem('qr_entries') || '[]');
-var config = JSON.parse(localStorage.getItem('qr_config') || '{"token":"8816604840:AAGhrlFMgrz71sNgKxhgPnJvdmu0gbjtYEw","chatId":"8881681054"}');
 var html5QrCode = null;
 var scanning = false;
 var lastData = null;
 var tTimer = null;
 var _scannerLoaded = false;
-var _xlsxLoaded = false;
-
-function loadScript(url) {
-  return new Promise(function(resolve, reject) {
-    var s = document.createElement('script');
-    s.src = url;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
-function loadScanner() {
-  if (_scannerLoaded) return Promise.resolve();
-  _('scanStatus').textContent = 'Загрузка сканера...';
-  return loadScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js').then(function(){ _scannerLoaded = true; });
-}
-
-function loadXLSX() {
-  if (_xlsxLoaded) return Promise.resolve();
-  return loadScript('https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js').then(function(){ _xlsxLoaded = true; });
-}
+var _scannerLoading = false;
 
 function _(id) { return document.getElementById(id); }
 
@@ -183,31 +146,86 @@ function toast(msg, err) {
   tTimer = setTimeout(function(){ el.classList.remove('show'); }, 2200);
 }
 
-document.querySelectorAll('.tab').forEach(function(t){
-  t.onclick = function(){
-    document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('active'); });
-    document.querySelectorAll('.section').forEach(function(x){ x.classList.remove('active'); });
-    t.classList.add('active');
-    document.getElementById(t.dataset.tab).classList.add('active');
-  };
-});
-
-function parseQR(text) {
-  var d = { date: '', sum: '', number: '' };
-  try {
-    var p = text.startsWith('http') ? new URL(text).searchParams : new URLSearchParams(text);
-    d.number = p.get('i') || p.get('fd') || '';
-    d.sum = p.get('s') || '';
-    var tVal = p.get('t') || '';
-    if (tVal) { var m = tVal.match(/^(\d{4})(\d{2})(\d{2})/); if (m) d.date = m[3]+'.'+m[2]+'.'+m[1]; }
-  } catch(e) {}
-  return d;
+function loadScript(url) {
+  return new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = url; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
 
+function loadScanner() {
+  if (_scannerLoaded) return Promise.resolve();
+  if (_scannerLoading) return new Promise(function(r){ setTimeout(function(){ r(loadScanner()); }, 500); });
+  _scannerLoading = true;
+  _('scanStatus').textContent = 'Загрузка сканера...';
+  return loadScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js').then(function(){ _scannerLoaded = true; _scannerLoading = false; });
+}
+
+// ------ Connection ------
+function tryConnect() {
+  _('connStatusBox').textContent = 'Поиск сервера...';
+  _('connStatusBox').className = 'conn-box wait';
+
+  // Try common USB-tethering IPs
+  var candidates = ['192.168.42.129', '192.168.42.1', '192.168.137.1', '192.168.0.1', '192.168.1.1', '10.0.2.2'];
+  // Also check if we were already connected
+  var saved = localStorage.getItem('qr_server_url');
+  if (saved) candidates.unshift(saved);
+
+  var tried = 0;
+  candidates.forEach(function(ip) {
+    var url = 'http://' + ip + ':8080';
+    fetch(url + '/list', { method: 'GET', mode: 'no-cors' }).catch(function(){});
+    fetch(url + '/list', { method: 'GET' })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (Array.isArray(data)) {
+          BASE = url;
+          localStorage.setItem('qr_server_url', BASE);
+          connected();
+        }
+      })
+      .catch(function(){});
+  });
+
+  // Also try the page origin (if served by the server)
+  var origin = window.location.origin;
+  if (origin && origin !== 'null' && origin !== 'file://') {
+    fetch(origin + '/list')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (Array.isArray(data)) {
+          BASE = origin;
+          localStorage.setItem('qr_server_url', BASE);
+          connected();
+        }
+      })
+      .catch(function(){});
+  }
+
+  setTimeout(function(){
+    if (!BASE) {
+      _('connStatusBox').textContent = 'Не найден ПК. Подключите USB-кабель и включите USB-модем';
+      _('connStatusBox').className = 'conn-box off';
+    }
+  }, 3000);
+}
+
+function connected() {
+  _('connScreen').classList.add('hidden');
+  _('mainApp').classList.remove('hidden');
+  _('serverInfo').textContent = '&#9679; Подключено: ' + BASE;
+  _('subText').textContent = 'Сканируйте QR-код чека';
+  renderTable();
+  loadList();
+}
+
+// ------ Scanner ------
 async function startScan() {
   if (scanning) return;
   _('scannerWrap').classList.add('active');
-  _('scanStatus').textContent = 'Загрузка сканера...';
+  _('scanStatus').textContent = 'Загрузка...';
   try {
     await loadScanner();
     html5QrCode = new Html5Qrcode("reader");
@@ -219,17 +237,29 @@ async function startScan() {
       function() {}
     );
     scanning = true;
-    _('scanStatus').textContent = 'Наведите камеру на QR-код чека';
+    _('scanStatus').textContent = 'Наведите камеру на QR-код';
   } catch(e) {
     _('scanStatus').textContent = 'Ошибка: ' + e.message;
     setTimeout(function(){ _('scannerWrap').classList.remove('active'); }, 2000);
   }
 }
 
-async function stopScan() {
-  if (html5QrCode) { try { await html5QrCode.stop(); html5QrCode.clear(); } catch(e) {} html5QrCode = null; }
+function stopScan() {
+  if (html5QrCode) { try { html5QrCode.stop(); html5QrCode.clear(); } catch(e) {} html5QrCode = null; }
   scanning = false;
   _('scannerWrap').classList.remove('active');
+}
+
+function parseQR(text) {
+  var d = { date: '', sum: '', number: '' };
+  try {
+    var p = text.startsWith('http') ? new URL(text).searchParams : new URLSearchParams(text);
+    d.number = p.get('i') || p.get('fd') || '';
+    d.sum = p.get('s') || '';
+    var t = p.get('t') || '';
+    if (t) { var m = t.match(/^(\d{4})(\d{2})(\d{2})/); if (m) d.date = m[3]+'.'+m[2]+'.'+m[1]; }
+  } catch(e) {}
+  return d;
 }
 
 function showResult(raw) {
@@ -237,11 +267,27 @@ function showResult(raw) {
   _('preview').innerHTML =
     '<strong>Дата:</strong> ' + (lastData.date || '—') + '<br>' +
     '<strong>Сумма:</strong> ' + (lastData.sum || '—') + '<br>' +
-    '<strong>Номер ФД:</strong> ' + (lastData.number || '—');
+    '<strong>Номер:</strong> ' + (lastData.number || '—');
   _('fieldProduct').value = '';
-  _('tgError').style.display = 'none';
+  _('errMsg').style.display = 'none';
+  _('errMsg').textContent = '';
   _('resultCard').classList.remove('hidden');
-  document.querySelector('[data-tab="scanTab"]').click();
+  document.querySelector('[data-tab="scan"]').click();
+  setTimeout(function(){ _('fieldProduct').focus(); }, 300);
+}
+
+// ------ Send to PC ------
+function sendToServer(entry, cb) {
+  fetch(BASE + '/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry)
+  })
+  .then(function(r){
+    if (r.ok) cb(null);
+    else cb('Ошибка сервера ' + r.status);
+  })
+  .catch(function(){ cb('Нет соединения с ПК. Проверьте USB-кабель'); });
 }
 
 function addEntry(product) {
@@ -253,66 +299,34 @@ function addEntry(product) {
   return entry;
 }
 
-function sendToTG(entry, cb) {
-  var msg = 'Чек #' + (entries.length) + '\nДата: ' + (entry.date || '—') + '\nТовар: ' + (entry.product || '—') + '\nСумма: ' + (entry.sum || '—');
-  fetch(TG + config.token + '/sendMessage', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'chat_id=' + config.chatId + '&text=' + encodeURIComponent(msg)
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(j){
-    if (j.ok) cb(null);
-    else cb(j.description || 'Ошибка');
-  })
-  .catch(function(){ cb('Нет соединения с Telegram. Проверьте интернет'); });
+function doSendEntry(product) {
+  if (!BASE) { toast('Нет соединения с ПК', 1); return; }
+  var entry = addEntry(product);
+  if (!entry) return;
+  sendToServer(entry, function(err) {
+    if (err) {
+      entries.pop();
+      localStorage.setItem('qr_entries', JSON.stringify(entries));
+      renderTable();
+      _('errMsg').textContent = 'Ошибка: ' + err;
+      _('errMsg').style.display = 'block';
+    } else {
+      toast('Отправлено на ПК!');
+      _('resultCard').classList.add('hidden');
+      lastData = null;
+      loadList();
+    }
+  });
 }
 
-_('btnSend').onclick = function() {
-  if (!config.token || !config.chatId) { toast('Настройте бота во вкладке НАСТРОЙКИ', 1); return; }
-  var p = _('fieldProduct').value.trim();
-  var entry = addEntry(p);
-  if (!entry) return;
-  _('btnSend').disabled = true;
-  _('btnSend').innerHTML = 'Отправка...';
-  sendToTG(entry, function(err) {
-    _('btnSend').disabled = false;
-    _('btnSend').innerHTML = 'Отправить в Telegram';
-    if (err) {
-      _('resultCard').classList.add('hidden');
-      lastData = null;
-      toast('Ошибка: ' + err, 1);
-    } else {
-      toast('Отправлено!');
-      _('resultCard').classList.add('hidden');
-      lastData = null;
-    }
-  });
-};
-
-_('btnSkip').onclick = function() {
-  if (!config.token || !config.chatId) { toast('Настройте бота во вкладке НАСТРОЙКИ', 1); return; }
-  var entry = addEntry('');
-  if (!entry) return;
-  sendToTG(entry, function(err) {
-    if (err) {
-      _('resultCard').classList.add('hidden');
-      lastData = null;
-      toast('Ошибка: ' + err, 1);
-    } else {
-      toast('Отправлено!');
-      _('resultCard').classList.add('hidden');
-      lastData = null;
-    }
-  });
-};
-
+_('btnSend').onclick = function() { doSendEntry(_('fieldProduct').value.trim()); };
+_('btnSkip').onclick = function() { doSendEntry(''); };
 _('btnCancel').onclick = function() { _('resultCard').classList.add('hidden'); lastData = null; };
 
+// ------ List ------
 function renderTable() {
   var tb = _('tbody'), em = _('emptyMsg'), la = _('listActions');
   tb.innerHTML = '';
-  _('countBadge').textContent = entries.length;
   if (!entries.length) { em.classList.remove('hidden'); la.classList.add('hidden'); return; }
   em.classList.add('hidden'); la.classList.remove('hidden');
   entries.forEach(function(e,i) {
@@ -329,112 +343,58 @@ function renderTable() {
   });
 }
 
+function loadList() {
+  if (!BASE) return;
+  fetch(BASE + '/list')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var cnt = _('entryCount');
+      if (cnt) cnt.textContent = data.length;
+    }).catch(function(){});
+}
+
 _('btnScan').onclick = startScan;
 _('btnStop').onclick = stopScan;
 
-_('btnExportTG').onclick = function() {
-  if (!entries.length) { toast('Нет записей', 1); return; }
-  if (!config.token||!config.chatId) { toast('Настройте бота', 1); return; }
-  var btn = this; btn.disabled = true; btn.innerHTML = 'Загрузка...';
-  loadXLSX().then(function() {
-    btn.disabled = false; btn.innerHTML = '&#128228; .xlsx в Telegram';
-    var wb = XLSX.utils.book_new();
-    var data = [['№','Дата','Наименование','Сумма']];
-    entries.forEach(function(e,i){ data.push([i+1, e.date||'', e.product||'', e.sum||'']); });
-    var ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
-    XLSX.utils.book_append_sheet(wb, ws, 'Чеки');
-    var out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-    var blob = new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    var fd = new FormData();
-    fd.append('chat_id', config.chatId);
-    fd.append('document', blob, 'cheki.xlsx');
-    fd.append('caption', 'QR-Excel: ' + entries.length + ' записей');
-    fetch(TG + config.token + '/sendDocument', {method:'POST', body: fd})
-      .then(function(r){ return r.json(); })
-      .then(function(j){ if (j.ok) toast('Excel отправлен в Telegram'); else toast('Ошибка: '+(j.description||'?'),1); })
-      .catch(function(){ toast('Ошибка отправки', 1); });
-  });
-};
-
-_('btnExportLocal').onclick = function() {
-  if (!entries.length) { toast('Нет записей', 1); return; }
-  var btn = this; btn.disabled = true; btn.innerHTML = 'Загрузка...';
-  loadXLSX().then(function() {
-    btn.disabled = false; btn.innerHTML = '&#128190; Скачать .xlsx';
-    var wb = XLSX.utils.book_new();
-  var data = [['№','Дата','Наименование','Сумма']];
-  entries.forEach(function(e,i){ data.push([i+1, e.date||'', e.product||'', e.sum||'']); });
-  var ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{w:5},{w:14},{w:30},{w:12}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Чеки');
-  var out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-  var blob = new Blob([out], {type:'application/octet-stream'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = 'cheki.xlsx';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('Файл cheki.xlsx скачан');
-  });
+_('btnOpenExcel').onclick = function() {
+  if (!BASE) { toast('Нет соединения', 1); return; }
+  fetch(BASE + '/open').then(function(){ toast('Excel открыт на ПК'); }).catch(function(){ toast('Ошибка', 1); });
 };
 
 _('btnClear').onclick = function() {
   if (!confirm('Удалить все записи?')) return;
-  entries = [];
-  localStorage.setItem('qr_entries', '[]');
+  entries = []; localStorage.setItem('qr_entries', '[]');
   renderTable();
+  if (BASE) fetch(BASE + '/clear', {method:'POST'}).catch(function(){});
   toast('Очищено');
 };
 
-_('cfgToken').value = config.token;
-_('cfgChatId').value = config.chatId;
+_('btnRetryConn').onclick = tryConnect;
 
-_('btnSaveCfg').onclick = function() {
-  config.token = _('cfgToken').value.trim();
-  config.chatId = _('cfgChatId').value.trim();
-  localStorage.setItem('qr_config', JSON.stringify(config));
-  _('cfgStatus').textContent = 'Сохранено';
-  setTimeout(function(){ _('cfgStatus').textContent = ''; }, 2000);
-};
+// Tabs
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick = function(){
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('active'); });
+    document.querySelectorAll('.section').forEach(function(x){ x.classList.remove('active'); });
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab + 'Tab').classList.add('active');
+    if (t.dataset.tab === 'list') loadList();
+  };
+});
 
-_('btnTestTG').onclick = function() {
-  if (!config.token || !config.chatId) { toast('Заполните токен и Chat ID', 1); return; }
-  var el = _('cfgStatus');
-  el.textContent = 'Проверка...';
-  fetch(TG + config.token + '/sendMessage', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'chat_id=' + config.chatId + '&text=' + encodeURIComponent('QR-Excel: подключение работает')
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(j){
-    if (j.ok) { el.textContent = 'Работает! Проверьте Telegram'; el.style.color = '#065f46'; toast('Сообщение отправлено!'); }
-    else { el.textContent = 'Ошибка: '+(j.description||'?'); el.style.color = '#991b1b'; }
-  })
-  .catch(function(){ el.textContent = 'Нет соединения с Telegram'; el.style.color = '#991b1b'; });
-};
-
-function checkConn() {
-  var el = _('connStatus');
-  if (!config.token) { el.textContent = 'НЕТ ТОКЕНА'; el.className = 'conn-status off'; return; }
-  fetch(TG + config.token + '/getMe')
-    .then(function(r){ return r.json(); })
-    .then(function(j){
-      if (j.ok) { el.textContent = 'ONLINE'; el.className = 'conn-status on'; }
-      else { el.textContent = 'ОШИБКА'; el.className = 'conn-status off'; }
-    })
-    .catch(function(){ el.textContent = 'OFFLINE'; el.className = 'conn-status off'; });
+// Init
+var saved = localStorage.getItem('qr_server_url');
+if (saved) {
+  fetch(saved + '/list').then(function(r){ return r.json(); }).then(function(data){
+    if (Array.isArray(data)) { BASE = saved; connected(); }
+    else { _('connScreen').classList.remove('hidden'); tryConnect(); }
+  }).catch(function(){ _('connScreen').classList.remove('hidden'); tryConnect(); });
+} else {
+  tryConnect();
 }
 
 renderTable();
-checkConn();
-setInterval(checkConn, 30000);
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(function(){});
-}
+setInterval(function(){ if (BASE) loadList(); }, 10000);
 </script>
 </body>
 </html>

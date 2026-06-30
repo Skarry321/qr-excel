@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-title" content="QR-Excel">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#4361ee">
-<link rel="manifest" href="manifest.json">
 <title>QR → Excel</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
@@ -41,23 +40,21 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 .del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;cursor:pointer;font-size:11px;font-weight:600}
-.conn-info{text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:8px}
-.conn-info.good{background:#d1fae5;color:#065f46}
-.conn-info.bad{background:#fee2e2;color:#991b1b}
-.conn-info.wait{background:#fef3c7;color:#92400e}
+.info-box{background:#f0f7ff;border:1px solid #bddbff;border-radius:12px;padding:14px;margin-bottom:10px;text-align:center;line-height:1.7;font-size:13px}
+.info-box strong{color:#4361ee}
 </style>
 </head>
 <body>
 
 <h1>QR → Excel</h1>
-<div id="connBar" class="conn-info wait">Подключение...</div>
+<div id="infoBox" class="info-box">Загрузка...</div>
 
-<div class="card">
-  <button class="btn btn-primary" id="btnScan">&#128247; Сканировать чек</button>
+<div class="card hidden" id="mainUI">
+  <button class="btn btn-primary" id="btnScan">Сканировать чек</button>
   <div class="scanner-wrap" id="scannerWrap">
     <div id="reader"></div>
     <p class="status" id="scanStatus">Наведите камеру на QR-код</p>
-    <button class="btn btn-gray" id="btnStop">&#10005; Закрыть</button>
+    <button class="btn btn-gray" id="btnStop">Закрыть</button>
   </div>
 </div>
 
@@ -70,7 +67,7 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
   <button class="btn btn-gray" id="btnCancel">Отмена</button>
 </div>
 
-<div class="card">
+<div class="card hidden" id="listCard">
   <div class="table-wrap">
     <table><thead><tr><th>#</th><th>Дата</th><th>Товар</th><th>Сумма</th><th></th></tr></thead>
     <tbody id="tbody"></tbody></table>
@@ -88,37 +85,45 @@ th{font-size:10px;color:#8e8e93;background:#fafafa}
 var BASE = null;
 var entries = JSON.parse(localStorage.getItem('q')||'[]');
 var qr=null,scanning=false,lastData=null,tt=null;
-
 function $(i){return document.getElementById(i)}
 function tm(m,e){clearTimeout(tt);var t=$('toast');t.textContent=m;t.style.background=e?'#ff3b30':'#1c1c1e';t.classList.add('show');tt=setTimeout(function(){t.classList.remove('show')},2500)}
 function pr(t){var d={date:'',sum:'',num:''};try{var p=t.startsWith('http')?new URL(t).searchParams:new URLSearchParams(t);d.num=p.get('i')||p.get('fd')||'';d.sum=p.get('s')||'';var v=p.get('t')||'';if(v){var m=v.match(/^(\d{4})(\d{2})(\d{2})/);if(m)d.date=m[3]+'.'+m[2]+'.'+m[1]}}catch(e){}return d}
 
-function setConn(u){
-  BASE=u;localStorage.setItem('sv',u);
-  $('connBar').textContent='Подключено к ПК: '+u;$('connBar').className='conn-info good';
-  tm('Подключено!');rt();
+// Если страница открыта с ПК-сервера (HTTP, не HTTPS)
+var isPC = window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+var origin = window.location.origin;
+var saved = localStorage.getItem('sv');
+
+if (isPC) {
+  // Открыто с ПК-сервера - подключаемся
+  BASE = origin;
+  localStorage.setItem('sv', BASE);
+  showUI('Подключено к ПК: ' + BASE);
+} else {
+  // GitHub Pages или локальный файл
+  if (saved) {
+    // Пробуем сохраненный адрес
+    fetch(saved + '/ping').then(function(r){return r.text()}).then(function(t){
+      if (t === 'pong') { BASE = saved; showUI('Подключено к ПК: ' + BASE); }
+      else { showHelp(); }
+    }).catch(function(){ showHelp(); });
+  } else {
+    showHelp();
+  }
 }
 
-// Автоопределение: если страница открыта с ПК-сервера
-var origin = window.location.origin;
-if(origin && origin!='file://' && origin!='null'){
-  fetch(origin+'/ping').then(function(r){return r.text()}).then(function(t){
-    if(t=='pong')setConn(origin);
-    else{$('connBar').textContent='Ошибка: сервер ПК не отвечает';$('connBar').className='conn-info bad'}
-  }).catch(function(){
-    // Не с ПК-сервера, пробуем сохраненный URL
-    var sv = localStorage.getItem('sv');
-    if(sv){
-      fetch(sv+'/ping').then(function(r){return r.text()}).then(function(t){
-        if(t=='pong')setConn(sv);
-        else{$('connBar').textContent='Нет связи с ПК. Отсканируйте QR с экрана ПК';$('connBar').className='conn-info bad'}
-      }).catch(function(){$('connBar').textContent='Нет связи с ПК';$('connBar').className='conn-info bad'});
-    } else {
-      $('connBar').textContent='Откройте эту страницу через QR с экрана ПК';$('connBar').className='conn-info bad'
-    }
-  });
-} else {
-  $('connBar').textContent='Откройте через QR с экрана ПК';$('connBar').className='conn-info bad'
+function showUI(msg) {
+  $('infoBox').innerHTML = '<span style="color:#065f46">' + msg + '</span>';
+  $('mainUI').classList.remove('hidden');
+  $('listCard').classList.remove('hidden');
+  rt();
+}
+
+function showHelp() {
+  $('infoBox').innerHTML =
+    '1. Запустите <strong>qr-excel.exe</strong> на ПК<br>' +
+    '2. На телефоне откройте камеру и наведите на <strong>QR-код на экране ПК</strong><br>' +
+    '3. Или введите адрес вручную: <strong>http://ПК-IP:8080</strong>';
 }
 
 async function sc(){

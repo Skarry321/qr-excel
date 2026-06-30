@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -56,7 +56,6 @@ td{font-size:13px}
 .s-group input:focus{border-color:#4361ee;background:#fff}
 .s-group .hint{font-size:11px;color:#aeaeb2;margin:3px 0 0}
 .section{display:none}.section.active{display:block}
-.icon{display:inline-block;font-size:18px;line-height:1;margin-right:4px}
 .tabs{display:flex;gap:0;margin-bottom:12px;background:#e5e5ea;border-radius:10px;overflow:hidden;padding:2px}
 .tab{flex:1;padding:8px 0;text-align:center;font-size:13px;font-weight:600;border:none;background:transparent;color:#8e8e93;cursor:pointer;border-radius:8px;transition:.2s}
 .tab.active{background:#fff;color:#4361ee;box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -77,19 +76,15 @@ td{font-size:13px}
   <button class="tab" data-tab="cfgTab">НАСТРОЙКИ</button>
 </div>
 
-<!-- SCAN TAB -->
 <div id="scanTab" class="section active">
   <div class="card">
-    <button class="btn btn-primary" id="btnScan">
-      <span class="icon">&#128247;</span> Сканировать чек
-    </button>
+    <button class="btn btn-primary" id="btnScan"><span class="icon">&#128247;</span> Сканировать чек</button>
     <div class="scanner-wrap" id="scannerWrap">
       <div id="reader"></div>
       <p class="status" id="scanStatus">Наведите камеру на QR-код</p>
       <button class="btn btn-gray" id="btnStop">&#10005; Закрыть камеру</button>
     </div>
   </div>
-
   <div class="card hidden" id="resultCard">
     <div class="card-title">РАСПОЗНАНО</div>
     <div class="preview" id="preview"></div>
@@ -104,7 +99,6 @@ td{font-size:13px}
   </div>
 </div>
 
-<!-- LIST TAB -->
 <div id="listTab" class="section">
   <div class="card">
     <div class="card-title">ОТПРАВЛЕННЫЕ ЧЕКИ <span class="badge" id="countBadge">0</span></div>
@@ -115,15 +109,14 @@ td{font-size:13px}
     </div>
     <div id="listActions" class="hidden">
       <div class="row" style="margin-top:8px">
-        <button class="btn btn-success" id="btnExportTG">&#128228; .xlsx</button>
-        <button class="btn btn-primary" id="btnExportLocal">&#128190; Скачать</button>
+        <button class="btn btn-success" id="btnExportTG">&#128228; .xlsx в Telegram</button>
+        <button class="btn btn-primary" id="btnExportLocal">&#128190; Скачать .xlsx</button>
       </div>
       <button class="btn btn-danger" id="btnClear">Очистить все</button>
     </div>
   </div>
 </div>
 
-<!-- SETTINGS TAB -->
 <div id="cfgTab" class="section">
   <div class="card">
     <div class="card-title">ПОДКЛЮЧЕНИЕ К TELEGRAM</div>
@@ -146,168 +139,157 @@ td{font-size:13px}
 <div class="toast" id="toast"></div>
 
 <script>
-const TG = 'https://api.telegram.org/bot';
+var TG = 'https://api.telegram.org/bot';
+var entries = JSON.parse(localStorage.getItem('qr_entries') || '[]');
+var config = JSON.parse(localStorage.getItem('qr_config') || '{"token":"8816604840:AAGhrlFMgrz71sNgKxhgPnJvdmu0gbjtYEw","chatId":"8881681054"}');
+var html5QrCode = null;
+var scanning = false;
+var lastData = null;
+var tTimer = null;
 
-let entries = JSON.parse(localStorage.getItem('qr_entries') || '[]');
-let config = JSON.parse(localStorage.getItem('qr_config') || '{"token":"8816604840:AAGhrlFMgrz71sNgKxhgPnJvdmu0gbjtYEw","chatId":"8881681054"}');
-let html5QrCode = null;
-let scanning = false;
-let lastData = null;
-let tTimer = null;
-
-const $ = id => document.getElementById(id);
+function _(id) { return document.getElementById(id); }
 
 function toast(msg, err) {
   clearTimeout(tTimer);
-  const el = $('toast');
+  var el = _('toast');
   el.textContent = msg;
   el.style.background = err ? '#ff3b30' : '#1c1c1e';
   el.classList.add('show');
-  tTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  tTimer = setTimeout(function(){ el.classList.remove('show'); }, 2200);
 }
 
-// --- Tabs ---
-document.querySelectorAll('.tab').forEach(t => {
-  t.onclick = () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick = function(){
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('active'); });
+    document.querySelectorAll('.section').forEach(function(x){ x.classList.remove('active'); });
     t.classList.add('active');
     document.getElementById(t.dataset.tab).classList.add('active');
   };
 });
 
-// --- QR Parser ---
 function parseQR(text) {
-  const d = { date: '', sum: '', number: '' };
+  var d = { date: '', sum: '', number: '' };
   try {
-    const p = text.startsWith('http') ? new URL(text).searchParams : new URLSearchParams(text);
+    var p = text.startsWith('http') ? new URL(text).searchParams : new URLSearchParams(text);
     d.number = p.get('i') || p.get('fd') || '';
     d.sum = p.get('s') || '';
-    const t = p.get('t') || '';
-    if (t) { const m = t.match(/^(\d{4})(\d{2})(\d{2})/); if (m) d.date = m[3]+'.'+m[2]+'.'+m[1]; }
+    var tVal = p.get('t') || '';
+    if (tVal) { var m = tVal.match(/^(\d{4})(\d{2})(\d{2})/); if (m) d.date = m[3]+'.'+m[2]+'.'+m[1]; }
   } catch(e) {}
   return d;
 }
 
-// --- Scanner ---
 async function startScan() {
   if (scanning) return;
   try {
-    $('scannerWrap').classList.add('active');
-    $('scanStatus').textContent = 'Запуск камеры...';
+    _('scannerWrap').classList.add('active');
+    _('scanStatus').textContent = 'Запуск камеры...';
     html5QrCode = new Html5Qrcode("reader");
     await html5QrCode.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 250 } },
-      text => { if (scanning) { stopScan(); showResult(text); } },
-      () => {}
+      function(text) { if (scanning) { stopScan(); showResult(text); } },
+      function() {}
     );
     scanning = true;
-    $('scanStatus').textContent = 'Наведите камеру на QR-код чека';
+    _('scanStatus').textContent = 'Наведите камеру на QR-код чека';
   } catch(e) {
-    $('scanStatus').textContent = 'Ошибка: ' + e.message;
-    setTimeout(() => $('scannerWrap').classList.remove('active'), 2000);
+    _('scanStatus').textContent = 'Ошибка: ' + e.message;
+    setTimeout(function(){ _('scannerWrap').classList.remove('active'); }, 2000);
   }
 }
 
 async function stopScan() {
   if (html5QrCode) { try { await html5QrCode.stop(); html5QrCode.clear(); } catch(e) {} html5QrCode = null; }
   scanning = false;
-  $('scannerWrap').classList.remove('active');
+  _('scannerWrap').classList.remove('active');
 }
 
 function showResult(raw) {
   lastData = parseQR(raw);
-  $('preview').innerHTML =
+  _('preview').innerHTML =
     '<strong>Дата:</strong> ' + (lastData.date || '—') + '<br>' +
     '<strong>Сумма:</strong> ' + (lastData.sum || '—') + '<br>' +
     '<strong>Номер ФД:</strong> ' + (lastData.number || '—');
-  $('fieldProduct').value = '';
-  $('tgError').style.display = 'none';
-  $('resultCard').classList.remove('hidden');
+  _('fieldProduct').value = '';
+  _('tgError').style.display = 'none';
+  _('resultCard').classList.remove('hidden');
   document.querySelector('[data-tab="scanTab"]').click();
-}
-
-// --- Telegram ---
-async function sendToTG(entry, cb) {
-  const msg =
-    'Чек #' + (entries.length) + '\n' +
-    'Дата: ' + (entry.date || '—') + '\n' +
-    'Товар: ' + (entry.product || '—') + '\n' +
-    'Сумма: ' + (entry.sum || '—');
-
-  try {
-    const r = await fetch(TG + config.token + '/sendMessage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'chat_id=' + config.chatId + '&text=' + encodeURIComponent(msg)
-    });
-    const j = await r.json();
-    if (j.ok) return cb(null);
-    return cb(j.description || 'Ошибка');
-  } catch(e) {
-    return cb('Нет соединения с Telegram. Проверьте интернет на телефоне');
-  }
 }
 
 function addEntry(product) {
   if (!lastData) return null;
-  const entry = { date: lastData.date, sum: lastData.sum, number: lastData.number, product: product||'' };
+  var entry = { date: lastData.date, sum: lastData.sum, number: lastData.number, product: product||'' };
   entries.push(entry);
   localStorage.setItem('qr_entries', JSON.stringify(entries));
   renderTable();
   return entry;
 }
 
-$('btnSend').onclick = () => {
+function sendToTG(entry, cb) {
+  var msg = 'Чек #' + (entries.length) + '\nДата: ' + (entry.date || '—') + '\nТовар: ' + (entry.product || '—') + '\nСумма: ' + (entry.sum || '—');
+  fetch(TG + config.token + '/sendMessage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'chat_id=' + config.chatId + '&text=' + encodeURIComponent(msg)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if (j.ok) cb(null);
+    else cb(j.description || 'Ошибка');
+  })
+  .catch(function(){ cb('Нет соединения с Telegram. Проверьте интернет'); });
+}
+
+_('btnSend').onclick = function() {
   if (!config.token || !config.chatId) { toast('Настройте бота во вкладке НАСТРОЙКИ', 1); return; }
-  const p = $('fieldProduct').value.trim();
-  const entry = addEntry(p);
+  var p = _('fieldProduct').value.trim();
+  var entry = addEntry(p);
   if (!entry) return;
-  $('btnSend').disabled = true;
-  $('btnSend').textContent = 'Отправка...';
+  _('btnSend').disabled = true;
+  _('btnSend').innerHTML = 'Отправка...';
   sendToTG(entry, function(err) {
-    $('btnSend').disabled = false;
-    $('btnSend').innerHTML = '&#128228; Отправить в Telegram';
+    _('btnSend').disabled = false;
+    _('btnSend').innerHTML = 'Отправить в Telegram';
     if (err) {
-      $('tgError').textContent = 'Ошибка Telegram: ' + err;
-      $('tgError').style.display = 'block';
+      _('tgError').textContent = 'Ошибка: ' + err;
+      _('tgError').style.display = 'block';
       entries.pop();
       localStorage.setItem('qr_entries', JSON.stringify(entries));
       renderTable();
     } else {
       toast('Отправлено!');
-      $('resultCard').classList.add('hidden');
+      _('resultCard').classList.add('hidden');
       lastData = null;
     }
   });
 };
 
-$('btnSkip').onclick = () => {
+_('btnSkip').onclick = function() {
   if (!config.token || !config.chatId) { toast('Настройте бота во вкладке НАСТРОЙКИ', 1); return; }
-  const entry = addEntry('');
+  var entry = addEntry('');
   if (!entry) return;
   sendToTG(entry, function(err) {
     if (err) {
-      $('tgError').textContent = 'Ошибка Telegram: ' + err;
-      $('tgError').style.display = 'block';
+      _('tgError').textContent = 'Ошибка: ' + err;
+      _('tgError').style.display = 'block';
       entries.pop();
       localStorage.setItem('qr_entries', JSON.stringify(entries));
       renderTable();
     } else {
       toast('Отправлено!');
-      $('resultCard').classList.add('hidden');
+      _('resultCard').classList.add('hidden');
       lastData = null;
     }
   });
 };
 
-$('btnCancel').onclick = () => { $('resultCard').classList.add('hidden'); lastData = null; };
+_('btnCancel').onclick = function() { _('resultCard').classList.add('hidden'); lastData = null; };
 
 function renderTable() {
-  const tb = $('tbody'), em = $('emptyMsg'), la = $('listActions');
+  var tb = _('tbody'), em = _('emptyMsg'), la = _('listActions');
   tb.innerHTML = '';
-  $('countBadge').textContent = entries.length;
+  _('countBadge').textContent = entries.length;
   if (!entries.length) { em.classList.remove('hidden'); la.classList.add('hidden'); return; }
   em.classList.add('hidden'); la.classList.remove('hidden');
   entries.forEach(function(e,i) {
@@ -324,10 +306,10 @@ function renderTable() {
   });
 }
 
-$('btnScan').onclick = startScan;
-$('btnStop').onclick = stopScan;
+_('btnScan').onclick = startScan;
+_('btnStop').onclick = stopScan;
 
-$('btnExportTG').onclick = function() {
+_('btnExportTG').onclick = function() {
   if (!entries.length) { toast('Нет записей', 1); return; }
   if (!config.token||!config.chatId) { toast('Настройте бота', 1); return; }
   var wb = XLSX.utils.book_new();
@@ -344,14 +326,11 @@ $('btnExportTG').onclick = function() {
   fd.append('caption', 'QR-Excel: ' + entries.length + ' записей');
   fetch(TG + config.token + '/sendDocument', {method:'POST', body: fd})
     .then(function(r){ return r.json(); })
-    .then(function(j){
-      if (j.ok) toast('Excel отправлен в Telegram');
-      else toast('Ошибка: ' + (j.description||'?'), 1);
-    })
+    .then(function(j){ if (j.ok) toast('Excel отправлен в Telegram'); else toast('Ошибка: '+(j.description||'?'),1); })
     .catch(function(){ toast('Ошибка отправки', 1); });
 };
 
-$('btnExportLocal').onclick = function() {
+_('btnExportLocal').onclick = function() {
   if (!entries.length) { toast('Нет записей', 1); return; }
   var wb = XLSX.utils.book_new();
   var data = [['№','Дата','Наименование','Сумма']];
@@ -370,7 +349,7 @@ $('btnExportLocal').onclick = function() {
   toast('Файл cheki.xlsx скачан');
 };
 
-$('btnClear').onclick = function() {
+_('btnClear').onclick = function() {
   if (!confirm('Удалить все записи?')) return;
   entries = [];
   localStorage.setItem('qr_entries', '[]');
@@ -378,21 +357,20 @@ $('btnClear').onclick = function() {
   toast('Очищено');
 };
 
-// Settings
-$('cfgToken').value = config.token;
-$('cfgChatId').value = config.chatId;
+_('cfgToken').value = config.token;
+_('cfgChatId').value = config.chatId;
 
-$('btnSaveCfg').onclick = function() {
-  config.token = $('cfgToken').value.trim();
-  config.chatId = $('cfgChatId').value.trim();
+_('btnSaveCfg').onclick = function() {
+  config.token = _('cfgToken').value.trim();
+  config.chatId = _('cfgChatId').value.trim();
   localStorage.setItem('qr_config', JSON.stringify(config));
-  $('cfgStatus').textContent = 'Сохранено';
-  setTimeout(function(){ $('cfgStatus').textContent = ''; }, 2000);
+  _('cfgStatus').textContent = 'Сохранено';
+  setTimeout(function(){ _('cfgStatus').textContent = ''; }, 2000);
 };
 
-$('btnTestTG').onclick = function() {
+_('btnTestTG').onclick = function() {
   if (!config.token || !config.chatId) { toast('Заполните токен и Chat ID', 1); return; }
-  var el = $('cfgStatus');
+  var el = _('cfgStatus');
   el.textContent = 'Проверка...';
   fetch(TG + config.token + '/sendMessage', {
     method: 'POST',
@@ -401,24 +379,14 @@ $('btnTestTG').onclick = function() {
   })
   .then(function(r){ return r.json(); })
   .then(function(j){
-    if (j.ok) {
-      el.textContent = 'Подключение работает! Проверьте Telegram';
-      el.style.color = '#065f46';
-      toast('Сообщение отправлено!');
-    } else {
-      el.textContent = 'Ошибка: ' + (j.description||'?');
-      el.style.color = '#991b1b';
-    }
+    if (j.ok) { el.textContent = 'Работает! Проверьте Telegram'; el.style.color = '#065f46'; toast('Сообщение отправлено!'); }
+    else { el.textContent = 'Ошибка: '+(j.description||'?'); el.style.color = '#991b1b'; }
   })
-  .catch(function() {
-    el.textContent = 'Нет соединения с Telegram';
-    el.style.color = '#991b1b';
-  });
+  .catch(function(){ el.textContent = 'Нет соединения с Telegram'; el.style.color = '#991b1b'; });
 };
 
-// Connection check
 function checkConn() {
-  var el = $('connStatus');
+  var el = _('connStatus');
   if (!config.token) { el.textContent = 'НЕТ ТОКЕНА'; el.className = 'conn-status off'; return; }
   fetch(TG + config.token + '/getMe')
     .then(function(r){ return r.json(); })
@@ -426,10 +394,7 @@ function checkConn() {
       if (j.ok) { el.textContent = 'ONLINE'; el.className = 'conn-status on'; }
       else { el.textContent = 'ОШИБКА'; el.className = 'conn-status off'; }
     })
-    .catch(function(){
-      el.textContent = 'OFFLINE';
-      el.className = 'conn-status off';
-    });
+    .catch(function(){ el.textContent = 'OFFLINE'; el.className = 'conn-status off'; });
 }
 
 renderTable();

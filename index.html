@@ -23,7 +23,6 @@ h1{font-size:24px;font-weight:700;padding:18px 0 2px;background:linear-gradient(
 .btn:active{opacity:.6}
 .btn-primary{background:#4361ee}
 .btn-success{background:#34c759}
-.btn-orange{background:#f59e0b;color:#fff}
 .btn-danger{background:#ff3b30}
 .btn-gray{background:#f2f2f7;color:#1c1c1e;font-weight:500}
 .scanner-wrap{position:relative;width:100%;aspect-ratio:1/1;max-height:360px;overflow:hidden;border-radius:14px;background:#000;display:none;margin-bottom:4px}
@@ -42,27 +41,25 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:8px 6px;text-align:left;border-bottom:1px solid #f2f2f7}
 th{font-size:10px;text-transform:uppercase;color:#8e8e93;font-weight:600;background:#fafafa}
 td{font-size:12px}
-.table-wrap{max-height:280px;overflow-y:auto;border-radius:12px;border:1px solid #f2f2f7}
+.table-wrap{max-height:240px;overflow-y:auto;border-radius:12px;border:1px solid #f2f2f7}
 .empty{padding:24px;text-align:center;color:#aeaeb2;font-size:14px}
 .hidden{display:none!important}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90%;box-shadow:0 4px 20px rgba(0,0,0,.2)}
 .toast.show{opacity:1}
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#4361ee;color:#fff;font-size:11px;font-weight:700}
-.small{font-size:12px;color:#8e8e93}
 .row{display:flex;gap:6px}.row .btn{flex:1}
 .del-btn{padding:4px 8px;border:none;border-radius:6px;background:#ff3b30;color:#fff;font-weight:600;cursor:pointer;font-size:11px}
-.guide{background:#f0f7ff;border:1px solid #bddbff;border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:12px;line-height:1.6;color:#1a404e}
-.guide strong{color:#4361ee}
+.link-box{background:#f0f7ff;border:2px dashed #4361ee;border-radius:12px;padding:14px;margin:8px 0;text-align:center;word-break:break-all}
+.link-box .url{font-size:13px;color:#4361ee;font-weight:600;margin:6px 0}
+.link-box .hint{font-size:11px;color:#8e8e93;margin-top:4px}
+.qr-box{text-align:center;margin:8px 0}
+.qr-box img{border-radius:8px;max-width:200px}
 </style>
 </head>
 <body>
 
 <h1>QR → Excel</h1>
-<p class="sub">Сканируйте чеки и переносите на ПК</p>
-
-<div class="guide">
-<strong>&#128161; Как перенести:</strong> Сканируйте чеки → сохраняйте → нажмите <strong>«Открыть на ПК»</strong> → подключите USB → файл откроется в Excel
-</div>
+<p class="sub">Сканируйте чеки → получайте ссылку на ПК</p>
 
 <div class="card">
   <button class="btn btn-primary" id="btnScan">&#128247; Сканировать чек</button>
@@ -78,7 +75,6 @@ td{font-size:12px}
   <label class="label">Наименование товара</label>
   <input class="field" id="fieldProduct" placeholder="Например: Молоко..." autocomplete="off">
   <button class="btn btn-success" id="btnSave">&#128190; Сохранить</button>
-  <button class="btn btn-orange" id="btnSaveDL">&#128229; Сохранить и скачать .xlsx</button>
   <button class="btn btn-gray" id="btnSkip">Без названия</button>
   <button class="btn btn-gray" id="btnCancel">Отмена</button>
 </div>
@@ -90,12 +86,22 @@ td{font-size:12px}
     <div class="empty" id="emptyMsg">Нет записей</div>
   </div>
   <div id="actions" class="hidden" style="margin-top:8px">
-    <div class="row">
-      <button class="btn btn-success" id="btnDLAll">Скачать все .xlsx</button>
-      <button class="btn btn-primary" id="btnOpenPC">Открыть на ПК</button>
-    </div>
+    <button class="btn btn-primary" id="btnUpload">&#128279; Отправить на ПК (file.io)</button>
+    <button class="btn btn-success" id="btnDLAll">&#128190; Скачать .xlsx на телефон</button>
     <button class="btn btn-danger" id="btnClear">Очистить</button>
   </div>
+</div>
+
+<div class="card hidden" id="linkCard">
+  <p style="font-weight:600;margin-bottom:6px">&#128279; Файл загружен!</p>
+  <p style="font-size:13px;color:#8e8e93">Откройте ссылку на ПК в браузере</p>
+  <div class="link-box">
+    <div class="url" id="fileLink">—</div>
+    <div class="hint">Файл удалится после скачивания</div>
+  </div>
+  <div class="qr-box" id="qrBox"></div>
+  <button class="btn btn-gray" id="btnCopyLink">&#128203; Копировать ссылку</button>
+  <button class="btn btn-gray" id="btnCloseLink">&#10005; Закрыть</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -105,9 +111,10 @@ var entries=JSON.parse(localStorage.getItem('q')||'[]');
 var qr=null,sn=false,ld=null,tt=null;
 
 function $(i){return document.getElementById(i)}
-function tm(m,e){clearTimeout(tt);var t=$('toast');t.textContent=m;t.style.background=e?'#ff3b30':'#1c1c1e';t.classList.add('show');tt=setTimeout(function(){t.classList.remove('show')},2200)}
+function tm(m,e){clearTimeout(tt);var t=$('toast');t.textContent=m;t.style.background=e?'#ff3b30':'#1c1c1e';t.classList.add('show');tt=setTimeout(function(){t.classList.remove('show')},2500)}
 function pr(t){var d={date:'',sum:'',num:''};try{var p=t.startsWith('http')?new URL(t).searchParams:new URLSearchParams(t);d.num=p.get('i')||p.get('fd')||'';d.sum=p.get('s')||'';var v=p.get('t')||'';if(v){var m=v.match(/^(\d{4})(\d{2})(\d{2})/);if(m)d.date=m[3]+'.'+m[2]+'.'+m[1]}}catch(e){}return d}
-function xl(data,name){var wb=XLSX.utils.book_new();var d=[['№','Дата','Наименование','Сумма']];data.forEach(function(e,i){d.push([i+1,e.date||'',e.product||'',e.sum||''])});var ws=XLSX.utils.aoa_to_sheet(d);ws['!cols']=[{w:5},{w:14},{w:30},{w:12}];XLSX.utils.book_append_sheet(wb,ws,'Чеки');var out=XLSX.write(wb,{bookType:'xlsx',type:'array'});var b=new Blob([out],{type:'application/octet-stream'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=name||'cheki.xlsx';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+function xl(data,name){var wb=XLSX.utils.book_new();var d=[['№','Дата','Наименование','Сумма']];data.forEach(function(e,i){d.push([i+1,e.date||'',e.product||'',e.sum||''])});var ws=XLSX.utils.aoa_to_sheet(d);ws['!cols']=[{w:5},{w:14},{w:30},{w:12}];XLSX.utils.book_append_sheet(wb,ws,'Чеки');var out=XLSX.write(wb,{bookType:'xlsx',type:'array'});return new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+function dl(blob,name){var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download=name||'cheki.xlsx';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
 
 async function sc(){
   if(sn)return;
@@ -125,7 +132,7 @@ function sp(){if(qr){try{qr.stop();qr.clear()}catch(e){}qr=null}sn=false;$('scan
 
 function sr(raw){
   ld=pr(raw);
-  $('preview').innerHTML='<strong>Дата:</strong> '+(ld.date||'—')+'<br><strong>Сумма:</strong> '+(ld.sum||'—')+'<br><strong>Номер:</strong> '+(ld.num||'—')+'<br><span style="font-size:11px;color:#aeaeb2">'+(raw.length>80?raw.slice(0,80)+'...':raw)+'</span>';
+  $('preview').innerHTML='<strong>Дата:</strong> '+(ld.date||'—')+'<br><strong>Сумма:</strong> '+(ld.sum||'—')+'<br><strong>Номер:</strong> '+(ld.num||'—');
   $('fieldProduct').value='';$('resultCard').classList.remove('hidden');
   setTimeout(function(){$('fieldProduct').focus()},300)
 }
@@ -137,13 +144,6 @@ function ad(p){
 }
 
 $('btnSave').onclick=function(){if(ad($('fieldProduct').value.trim())){tm('Сохранено');$('resultCard').classList.add('hidden');ld=null}};
-$('btnSaveDL').onclick=function(){
-  var e=ad($('fieldProduct').value.trim());
-  if(!e)return;
-  xl([e],'чек_'+(entries.length)+'.xlsx');
-  tm('Сохранено + .xlsx скачан');
-  $('resultCard').classList.add('hidden');ld=null
-};
 $('btnSkip').onclick=function(){if(ad('')){tm('Сохранено');$('resultCard').classList.add('hidden');ld=null}};
 $('btnCancel').onclick=function(){$('resultCard').classList.add('hidden');ld=null};
 
@@ -163,14 +163,47 @@ function rt(){
 }
 
 $('btnScan').onclick=sc;$('btnStop').onclick=sp;
-$('btnDLAll').onclick=function(){if(!entries.length){tm('Нет записей',1);return}xl(entries,'cheki_all.xlsx');tm('Скачан cheki_all.xlsx')};
 
-$('btnOpenPC').onclick=function(){
+$('btnDLAll').onclick=function(){
   if(!entries.length){tm('Нет записей',1);return}
-  xl(entries,'cheki.xlsx');
-  tm('Файл cheki.xlsx скачан. Подключите USB → скопируйте на ПК и откройте')
+  dl(xl(entries),'cheki.xlsx');tm('Файл скачан')
 };
 
+$('btnUpload').onclick=async function(){
+  if(!entries.length){tm('Нет записей',1);return}
+  var btn=this;btn.disabled=true;btn.textContent='Загрузка...';
+  try{
+    var blob=xl(entries);
+    var fd=new FormData();fd.append('file',blob,'cheki.xlsx');
+    
+    // Пробуем file.io
+    var r=await fetch('https://file.io/',{method:'POST',body:fd});
+    var j=await r.json();
+    
+    if(j.success && j.link){
+      showLink(j.link);
+      tm('Файл загружен! Откройте ссылку на ПК');
+    } else {
+      throw new Error(j.error||'Ошибка загрузки')
+    }
+  }catch(e){
+    tm('Ошибка: '+e.message,1)
+  }
+  btn.disabled=false;btn.textContent='Отправить на ПК (file.io)'
+};
+
+function showLink(url){
+  $('fileLink').textContent=url;
+  $('qrBox').innerHTML='<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(url)+'" alt="QR">';
+  $('linkCard').classList.remove('hidden')
+}
+
+$('btnCopyLink').onclick=function(){
+  var url=$('fileLink').textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(url);tm('Ссылка скопирована')}
+  else{tm('Выделите и скопируйте ссылку')}
+};
+$('btnCloseLink').onclick=function(){$('linkCard').classList.add('hidden')};
 $('btnClear').onclick=function(){if(!confirm('Удалить всё?'))return;entries=[];localStorage.setItem('q','[]');rt();tm('Очищено')};
 rt();
 </script>
